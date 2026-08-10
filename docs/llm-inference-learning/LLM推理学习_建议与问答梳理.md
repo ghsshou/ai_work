@@ -7,10 +7,12 @@
 > - 环境尚未搭建，当前以读源码 + 概念理解为主  
 >
 > **最后更新：** 2026-08-10  
+> **目录：** `docs/llm-inference-learning/`  
 > **配套文档：**  
 > - [推理学习进度记录.md](./推理学习进度记录.md)  
 > - [CXL_UB_内存池化与_UB_数据路径对比.md](./CXL_UB_内存池化与_UB_数据路径对比.md)  
-> - [CXL_UB_内存池化与数据路径对比.pptx](./CXL_UB_内存池化与数据路径对比.pptx)
+> - [CXL_UB_内存池化与数据路径对比.pptx](./CXL_UB_内存池化与数据路径对比.pptx)  
+> - [本目录 README](./README.md)
 
 ---
 
@@ -380,10 +382,11 @@ GitHub：
 | OpenURMA | https://arxiv.org/html/2605.28717 |
 | UB Service Core | https://www.openeuler.org/zh/projects/ub-service-core/ |
 | 本仓库 | https://github.com/ghsshou/ai_work |
-| 本文档（GitHub） | https://github.com/ghsshou/ai_work/blob/main/LLM推理学习_建议与问答梳理.md |
-| 进度记录 | https://github.com/ghsshou/ai_work/blob/main/推理学习进度记录.md |
-| CXL/UB 对比 Markdown | https://github.com/ghsshou/ai_work/blob/main/CXL_UB_内存池化与_UB_数据路径对比.md |
-| CXL/UB 对比 PPT | https://github.com/ghsshou/ai_work/blob/main/CXL_UB_内存池化与数据路径对比.pptx |
+| 本目录（GitHub） | https://github.com/ghsshou/ai_work/tree/main/docs/llm-inference-learning |
+| 本文档 | https://github.com/ghsshou/ai_work/blob/main/docs/llm-inference-learning/LLM推理学习_建议与问答梳理.md |
+| 进度记录 | https://github.com/ghsshou/ai_work/blob/main/docs/llm-inference-learning/推理学习进度记录.md |
+| CXL/UB 对比 Markdown | https://github.com/ghsshou/ai_work/blob/main/docs/llm-inference-learning/CXL_UB_内存池化与_UB_数据路径对比.md |
+| CXL/UB 对比 PPT | https://github.com/ghsshou/ai_work/blob/main/docs/llm-inference-learning/CXL_UB_内存池化与数据路径对比.pptx |
 
 ---
 
