@@ -291,8 +291,8 @@ num_new_tokens = (
 - PPT（23 页）：`CXL_UB_内存池化与数据路径对比.pptx`  
 
 GitHub：
-- https://github.com/ghsshou/ai_work/blob/main/CXL_UB_内存池化与_UB_数据路径对比.md  
-- https://github.com/ghsshou/ai_work/blob/main/CXL_UB_内存池化与数据路径对比.pptx  
+- https://github.com/ghsshou/ai_work/blob/main/docs/llm-inference-learning/CXL_UB_内存池化与_UB_数据路径对比.md  
+- https://github.com/ghsshou/ai_work/blob/main/docs/llm-inference-learning/CXL_UB_内存池化与数据路径对比.pptx  
 
 ---
 
