@@ -15,7 +15,7 @@ LLM 推理学习笔记与基础设施对比资料。
 
 ## 超节点技术报告
 
-📄 [`大模型负载驱动的昇腾超节点规模需求分析`](./docs/supernode-scale/昇腾超节点规模需求分析.md)
+📄 [`Markdown版`](./docs/supernode-scale/昇腾超节点规模需求分析.md) · [`Word版`](./docs/supernode-scale/昇腾超节点规模需求分析.docx)
 
 从 Dense/MoE 训练、长序列、在线/离线推理和 PD 分离负载出发，推导容量、算力、通信与高频并行域对昇腾超节点规模的要求，并包含 Atlas 950 参数化算例。
 
