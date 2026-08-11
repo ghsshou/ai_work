@@ -13,6 +13,12 @@ LLM 推理学习笔记与基础设施对比资料。
 | [CXL_UB_内存池化与_UB_数据路径对比.md](./docs/llm-inference-learning/CXL_UB_内存池化与_UB_数据路径对比.md) | 内存池化方案对比 + LD/ST vs URMA |
 | [CXL_UB_内存池化与数据路径对比.pptx](./docs/llm-inference-learning/CXL_UB_内存池化与数据路径对比.pptx) | 同上内容的 PPT（23 页） |
 
+## 超节点技术报告
+
+📄 [`大模型负载驱动的昇腾超节点规模需求分析`](./docs/supernode-scale/昇腾超节点规模需求分析.md)
+
+从 Dense/MoE 训练、长序列、在线/离线推理和 PD 分离负载出发，推导容量、算力、通信与高频并行域对昇腾超节点规模的要求，并包含 Atlas 950 参数化算例。
+
 ## 本地同步
 
 ```bash
