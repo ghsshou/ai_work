@@ -14,8 +14,8 @@
 ### 1. 克隆仓库
 
 ```bash
-git clone https://github.com/ghsshou/daily-qa-bot.git
-cd daily-qa-bot
+git clone https://github.com/ghsshou/ai_work.git
+cd ai_work/daily-qa-bot
 ```
 
 ### 2. 安装依赖
@@ -47,8 +47,7 @@ cp .env.example .env
 **CLI 模式（终端问答）：**
 
 ```bash
-cd src
-python -m bot.main cli
+PYTHONPATH=src python -m bot.main cli
 ```
 
 **Telegram 模式：**
@@ -58,8 +57,7 @@ python -m bot.main cli
 3. 启动：
 
 ```bash
-cd src
-python -m bot.main telegram
+PYTHONPATH=src python -m bot.main telegram
 ```
 
 ## 使用 DeepSeek / 其他兼容 API
