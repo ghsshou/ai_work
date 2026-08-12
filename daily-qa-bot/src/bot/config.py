@@ -1,3 +1,4 @@
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -15,7 +16,7 @@ class Settings(BaseSettings):
         "你是一个友好、专业的日常问答助手，回答简洁准确，必要时用中文。"
     )
     telegram_bot_token: str | None = None
-    max_history_turns: int = 10
+    max_history_turns: int = Field(default=10, ge=1)
 
 
 def get_settings() -> Settings:
