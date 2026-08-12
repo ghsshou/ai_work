@@ -10,8 +10,13 @@ LLM 推理学习笔记与基础设施对比资料。
 |------|------|
 | [LLM推理学习_建议与问答梳理.md](./docs/llm-inference-learning/LLM推理学习_建议与问答梳理.md) | **主索引**：学习建议 + 后续问答 |
 | [推理学习进度记录.md](./docs/llm-inference-learning/推理学习进度记录.md) | 进度快照与续学入口 |
-| [CXL_UB_内存池化与_UB_数据路径对比.md](./docs/llm-inference-learning/CXL_UB_内存池化与_UB_数据路径对比.md) | 内存池化方案对比 + LD/ST vs URMA |
-| [CXL_UB_内存池化与数据路径对比.pptx](./docs/llm-inference-learning/CXL_UB_内存池化与数据路径对比.pptx) | 同上内容的 PPT（23 页） |
+
+## UB / CXL 技术资料
+
+📁 [`docs/ub-cxl/`](./docs/ub-cxl/)
+
+- [`CXL与UB内存池化及数据路径对比`](./docs/ub-cxl/CXL_UB_内存池化与_UB_数据路径对比.md)
+- [`配套PPT（23页）`](./docs/ub-cxl/CXL_UB_内存池化与数据路径对比.pptx)
 
 ## 超节点技术报告
 
@@ -28,10 +33,10 @@ LLM 推理学习笔记与基础设施对比资料。
 ```bash
 # 首次
 git clone https://github.com/ghsshou/ai_work.git
-cd ai_work/docs/llm-inference-learning
+cd ai_work
 
 # 之后更新
 cd ai_work && git pull origin main
 ```
 
-GitHub 目录页：https://github.com/ghsshou/ai_work/tree/main/docs/llm-inference-learning
+GitHub 资料目录：https://github.com/ghsshou/ai_work/tree/main/docs

@@ -10,8 +10,8 @@
 > **目录：** `docs/llm-inference-learning/`  
 > **配套文档：**  
 > - [推理学习进度记录.md](./推理学习进度记录.md)  
-> - [CXL_UB_内存池化与_UB_数据路径对比.md](./CXL_UB_内存池化与_UB_数据路径对比.md)  
-> - [CXL_UB_内存池化与数据路径对比.pptx](./CXL_UB_内存池化与数据路径对比.pptx)  
+> - [UB / CXL技术资料](../ub-cxl/)
+> - [超节点规模需求报告](../supernode-scale/)
 > - [本目录 README](./README.md)
 
 ---
@@ -287,12 +287,12 @@ num_new_tokens = (
 - UB：NPU/CPU 对等 Load/Store，协议归一，绑定国产栈  
 
 **已输出文档：**
-- Markdown：`CXL_UB_内存池化与_UB_数据路径对比.md`  
-- PPT（23 页）：`CXL_UB_内存池化与数据路径对比.pptx`  
+- Markdown：[`../ub-cxl/CXL_UB_内存池化与_UB_数据路径对比.md`](../ub-cxl/CXL_UB_内存池化与_UB_数据路径对比.md)
+- PPT（23 页）：[`../ub-cxl/CXL_UB_内存池化与数据路径对比.pptx`](../ub-cxl/CXL_UB_内存池化与数据路径对比.pptx)
 
 GitHub：
-- https://github.com/ghsshou/ai_work/blob/main/docs/llm-inference-learning/CXL_UB_内存池化与_UB_数据路径对比.md  
-- https://github.com/ghsshou/ai_work/blob/main/docs/llm-inference-learning/CXL_UB_内存池化与数据路径对比.pptx  
+- https://github.com/ghsshou/ai_work/blob/main/docs/ub-cxl/CXL_UB_内存池化与_UB_数据路径对比.md
+- https://github.com/ghsshou/ai_work/blob/main/docs/ub-cxl/CXL_UB_内存池化与数据路径对比.pptx
 
 ---
 
@@ -385,8 +385,10 @@ GitHub：
 | 本目录（GitHub） | https://github.com/ghsshou/ai_work/tree/main/docs/llm-inference-learning |
 | 本文档 | https://github.com/ghsshou/ai_work/blob/main/docs/llm-inference-learning/LLM推理学习_建议与问答梳理.md |
 | 进度记录 | https://github.com/ghsshou/ai_work/blob/main/docs/llm-inference-learning/推理学习进度记录.md |
-| CXL/UB 对比 Markdown | https://github.com/ghsshou/ai_work/blob/main/docs/llm-inference-learning/CXL_UB_内存池化与_UB_数据路径对比.md |
-| CXL/UB 对比 PPT | https://github.com/ghsshou/ai_work/blob/main/docs/llm-inference-learning/CXL_UB_内存池化与数据路径对比.pptx |
+| UB/CXL 资料目录 | https://github.com/ghsshou/ai_work/tree/main/docs/ub-cxl |
+| CXL/UB 对比 Markdown | https://github.com/ghsshou/ai_work/blob/main/docs/ub-cxl/CXL_UB_内存池化与_UB_数据路径对比.md |
+| CXL/UB 对比 PPT | https://github.com/ghsshou/ai_work/blob/main/docs/ub-cxl/CXL_UB_内存池化与数据路径对比.pptx |
+| 超节点规模报告 | https://github.com/ghsshou/ai_work/tree/main/docs/supernode-scale |
 
 ---
 
