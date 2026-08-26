@@ -26,6 +26,7 @@ Hot Chips 2026 上 OpenAI 第一颗推理芯片的系统拆解：Serving 定位�
 
 - [`配套PPT（24页）`](./docs/jalapeno/OpenAI_Jalapeno_系统洞察.pptx)
 - [`Markdown 文字版`](./docs/jalapeno/OpenAI_Jalapeno_芯片系统洞察.md)
+- [`架构细节：slice / 网络 / Rubin 对比`](./docs/jalapeno/Jalapeno_架构细节_slice网络与Rubin对比.md)
 
 ## 超节点技术报告
 
