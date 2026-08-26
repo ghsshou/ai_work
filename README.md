@@ -18,6 +18,15 @@ LLM 推理学习笔记与基础设施对比资料。
 - [`CXL与UB内存池化及数据路径对比`](./docs/ub-cxl/CXL_UB_内存池化与_UB_数据路径对比.md)
 - [`配套PPT（23页）`](./docs/ub-cxl/CXL_UB_内存池化与数据路径对比.pptx)
 
+## OpenAI Jalapeño 芯片洞察
+
+📁 [`docs/jalapeno/`](./docs/jalapeno/)
+
+Hot Chips 2026 上 OpenAI 第一颗推理芯片的系统拆解：Serving 定位、KV 局部性、不做 PD 分离、128/2048 机架网络、Gluon/Codex 软件栈，以及跑分口径。
+
+- [`配套PPT（24页）`](./docs/jalapeno/OpenAI_Jalapeno_系统洞察.pptx)
+- [`Markdown 文字版`](./docs/jalapeno/OpenAI_Jalapeno_芯片系统洞察.md)
+
 ## 超节点技术报告
 
 **完整版：** [`Markdown`](./docs/supernode-scale/昇腾超节点规模需求分析.md) · [`Word`](./docs/supernode-scale/昇腾超节点规模需求分析.docx)
