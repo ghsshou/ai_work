@@ -2,7 +2,8 @@
 
 > **用途：** Hot Chips 2026 技术拆解，内部学习  
 > **日期：** 2026-08-26  
-> **配套 PPT：** [`OpenAI_Jalapeno_系统洞察.pptx`](./OpenAI_Jalapeno_系统洞察.pptx)（24 页）
+> **配套 PPT：** [`OpenAI_Jalapeno_系统洞察.pptx`](./OpenAI_Jalapeno_系统洞察.pptx)（24 页）  
+> **架构细节补充：** [`Jalapeno_架构细节_slice网络与Rubin对比.md`](./Jalapeno_架构细节_slice网络与Rubin对比.md)
 
 ---
 
