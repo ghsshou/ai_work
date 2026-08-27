@@ -1,6 +1,6 @@
 # Jalapeño 架构细节：Slice、网络、并行与 Rubin NVL72 对比
 
-> **用途：** 补全系统洞察 PPT 里没展开的几处：为什么切 core/HBM slice、网卡到底是什么、整柜和 Vera Rubin NVL72 怎么比、所谓 PD 融合在公开材料里实际长什么样。  
+> **用途：** 补全系统洞察 PPT 里没展开的几处：为什么切 core/HBM slice、网卡到底是什么、XPU 出不出光、整柜和 Vera Rubin NVL72 怎么比、所谓 PD 融合在公开材料里实际长什么样。  
 > **日期：** 2026-08-26  
 > **口径：** 2026-08 Hot Chips / OpenAI 博客 / SemiAnalysis 实验室报道。未公布的数字会标明「估计」或「未披露」。  
 > **配套：** [`OpenAI_Jalapeno_芯片系统洞察.md`](./OpenAI_Jalapeno_芯片系统洞察.md) · [`PPT`](./OpenAI_Jalapeno_系统洞察.pptx)
@@ -125,15 +125,186 @@ OpenAI 官方点名 Broadcom Tomahawk 进平台；TH6 / 1.6T / OCS 的拆法来�
         ▼
   Vindaloo 8 卡
         │
-        │  封装上 32×200G SerDes，不是网卡
-        ├─ 24 lane / 4.8 Tb/s ──► 6× TH6 102.4T   机架 128 卡（TP）
-        └─  8 lane / 1.6 Tb/s ──► 全局 TH6 + 1.6T 光 + OCS
-                                      最多 16 柜 2048 卡（EP）
+        │  封装上 32×200G 电 SerDes，不是网卡，也不是光口
+        ├─ 24 lane / 4.8 Tb/s ──► 6× TH6 102.4T   全程铜  机架 128 卡（TP）
+        └─  8 lane / 1.6 Tb/s ──► 全局 TH6（仍是铜）
+                                      │
+                                      ▼
+                                 面板 1.6T 可插拔光模块   ← 光电转换在这里
+                                      │
+                                      ▼
+                                 柜内 OCS → 光纤 → 对端 OCS → 对端全局 TH6（光→电）
+                                      → 铜背板 → 对端 XPU     最多 16 柜 2048 卡（EP）
 ```
 
 和 GB200/Rubin NVL72 对比：Nvidia 卡间是 NVLink + NVSwitch，北向才是网卡（通常每 GPU 一张 ConnectX）。Jalapeño 把卡间做成以太网交换（Tomahawk 6）当 scale-up，网卡只留在 CPU 柜做前端。
 
 未公开：NIC 品牌/SKU、是不是 RoCE、200G 口封装、有没有 SmartNIC/DPU、PCIe 是 x16 还是分叉。
+
+### 2.4 「铜缆 + OCS」不等于 XPU 出光
+
+**结论：Jalapeño 封装上没有光口。** 32 条 scale-up lane 全是电 SerDes，出封装后一律进铜背板。光电转换发生在 **全局 Chana 交换托盘的面板光模块** 上，不在 Vindaloo 加速器托盘上，更不在 XPU 封装上。
+
+容易混的点：跨框写「铜缆 + OCS」，听起来像卡自己出光。实际是 **两段介质**：
+
+1. **XPU → 本柜全局交换机：全程电。** 8 条 global lane 和 24 条 local lane 一样，走铜背板进 Chana / Tomahawk 6。
+2. **本柜交换机 → 别的柜：才变光。** TH6 面板上的 **1.6T 可插拔光模块** 做电→光，再进柜内 **OCS**，光纤出柜连到别的机架。
+
+OCS（optical circuit switch）只能切已经是光的信号。XPU 从不直接连 OCS。
+
+```text
+                    ┌─────────────── 本柜（电域）───────────────┐
+  Jalapeño XPU      │                                           │
+  I/O die           │  铜背板                                    │
+  32×200G 电 SerDes─┼──► Chana / TH6 ──► 本地 TH6：不出柜       │
+                    │                 │                         │
+                    │                 └──► 全局 TH6 面板         │
+                    │                      1.6T 光模块          │
+                    └──────────────────────┬────────────────────┘
+                                           │ 光
+                                           ▼
+                                      柜内 OCS_A
+                                           │ 光纤
+                                           ▼
+                                      柜内 OCS_B → 对端全局 TH6 面板（光→电）
+                                           → 铜背板 → 对端 XPU
+```
+
+对端同样是「交换机收光，再铜到卡」，不是光纤落到 XPU 上。完整对称路径见下一节。
+
+| 如果「XPU 出光」会看到什么 | 公开材料实际写的 |
+|---|---|
+| 封装 CPO / 硅光引擎 | I/O die 是 **N3E + 电 SerDes** |
+| Vindaloo 托盘前面板有 QSFP / OSFP | 加速器托盘走 **铜背板**，类似 Nvidia Oberon |
+| 全局 8 lane 直接打光纤、绕过 TH6 | 全局仍先铜进 TH6，再 **面板 1.6T 模块** |
+| OCS 挂在卡上 | OCS 在 **机架里、交换机之后** |
+
+这和 Nvidia NVL72 / Oberon 是同一类拆法：加速器侧保持短距电互连（功耗、延迟、良率都更好），跨柜才在交换机面板上插光。差别只是 Jalapeño 的交换机是 Tomahawk 6 以太网，不是 NVSwitch。
+
+Local 128 卡 **永远不出光**。跨柜时光电发生在 **两端的全局 Chana 面板模块** 上，不是只在源端做一次。
+
+### 2.5 跨柜「一跳」也不等于光直插对端卡
+
+容易把三件事拧成一件：
+
+| 口头上的「一跳」 | 实际指什么 | 对端还过不过交换机 |
+|---|---|---|
+| Local 128 | 真·一跳包交换：XPU → 本柜 TH6 → XPU，全程铜 | 过本柜交换机，无光 |
+| Global 8-rail rail-only | **同一条 rail 走到底，不再上第三级 spine 换轨** | **过对端全局 TH6** |
+| OCS 电路 | 光纤被切成一条直电路，OCS 本身不转发以太包 | 电路两端仍是两柜的交换机光模块 |
+
+公开口径更贴近中间那行，不是「源交换机出光后光纤插到对端 XPU」。
+
+跨柜完整路径是 **对称的交换机对交换机**，不是非对称的交换机对卡：
+
+```text
+  柜 A                                      柜 B
+  XPU_A                                     XPU_B
+    │ 电 SerDes / 铜背板                      │ 电 SerDes / 铜背板
+    ▼                                         ▼
+  全局 TH6_A                               全局 TH6_B     ← 对端仍要过这颗交换机
+    │ 面板 1.6T：电→光                       │ 面板 1.6T：光→电
+    ▼                                         ▲
+  柜内 OCS_A ──── 光纤 ──── OCS_B ────────────┘
+                 （电路交换，不算一跳以太网）
+```
+
+对端为什么还要过交换机：
+
+1. **对端 XPU 只有电 SerDes。** 光纤到柜，先要变成电，才能进铜背板。公开材料把 1.6T 模块放在 **Chana 面板**，不是 Vindaloo 面板。光→电之后，信号落在 **对端 TH6 的光口 SerDes** 上，再由这颗交换机转发到对着 XPU 的铜口。
+2. **每柜都有 2 个全局 Chana（估计带 TH6）。** 若对端只是「光模块直通到卡、交换机不在数据面」，对端这几颗 TH6 在收包时就闲着。更顺的读法是：每柜全局 TH6 都是 **leaf**——朝下 204.8 Tb/s 铜口接本柜 128 卡（128 × 1.6T），朝上大约同等带宽的光口进 OCS。这是 1:1、无过订阅的 leaf，跨柜自然是 `XPU → leaf_A → OCS → leaf_B → XPU`。
+3. **光电一定成对。** 源端电→光之后，目的端必须光→电。少一次，200G 电 SerDes 接不住光子。少的不是「对端交换机」，而是「对端 XPU 光口」——那一层本来就没有。
+
+rail-only 改变的是 **少一层包交换**，不是取消对端 leaf：
+
+```text
+不是这样（那才需要 XPU 收光）：
+  XPU_A ─铜─► TH6_A ─光─► OCS ─光─► XPU_B
+
+是这样（8-rail、无第三级 spine）：
+  XPU_A.rail_k ─铜─► TH6_A.rail_k ─光─► OCS ─光─► TH6_B.rail_k ─铜─► XPU_B.rail_k
+```
+
+包交换跳数：本柜全局 TH6 + 对端全局 TH6，**两跳**。OCS 是电路，不记一跳以太网。和 Local 128 的「一跳」不是同一个「一」。EP 跨柜走这条两跳；TP 尽量留在 Local 铜域里，就是为了不付这两跳和两次光电。
+
+若把光纤真的直落到对端卡上，对端 Vindaloo 必须有光模块或封装光引擎——那才叫 XPU 出光/收光。公开拆法对不上。
+
+未公开：1.6T 模块是 OSFP / OSFP-XD 还是别的封装、有没有 CPO 上交换机（公开口径是 front-panel transceiver，按可插拔理解）、OCS 供应商和端口数、全局到底是 2 跳 leaf–leaf 还是少数场景把 OCS 配成更接近直连的电路。后一项即使更「直」，光电仍在两柜的交换机面板上，不在 XPU 上。
+
+### 2.6 TH6 静态时延大概多少
+
+**Broadcom 没有给 Tomahawk 6 公布 ns 级 cut-through 数字。** 产品页只写 low latency、以及共享缓存带来的 **最低 tail latency**——后者是排队/incast，不是空载固有时延。
+
+中文里说的「静态时延」一般对应：**空载、cut-through、port-to-port（有时含 SerDes 的 ball-to-ball）**，不含队列、不含光模块 DSP、也不含光纤。
+
+可对标的公开数字：
+
+| 芯片 | 带宽 | 时延口径 | 来源 | 怎么用 |
+|---|---|---|---|---|
+| **Tomahawk 4** | 25.6T | 芯片约 **450 ns**（不含 FEC）；FEC 再加约 150 ns | Linley 对 TH4 的估计 | 上上代，流水线同类 |
+| **Tomahawk 5** | 51.2T | 芯片 cut-through **约 500 ns** | Wheeler’s Network | 和 TH6 同一条 Tomahawk 主干 |
+| **Tomahawk 5 整机** | 51.2T | **700 ns** | Arista 7060X6 数据手册（Latency from 700 ns） | 系统级，含板级/部分开销，比芯片数字略高 |
+| **Tomahawk 6** | 102.4T | 官方无 ns；ODM 写 **sub-microsecond**（<1 μs） | Broadcom 产品页；STORDIS 等白盒 | 按 **0.5–1 μs / 跳** 估 |
+| **Tomahawk Ultra** | 51.2T | **250 ns**（官方） | Broadcom 新闻稿 / BCM78920 | **不是 TH6。** 新架构，给 HPC / 低时延 scale-up |
+
+**不要把 250 ns 安在 TH6 上。** Broadcom 自己把 Ultra 从 TH5/TH6 拆开：SUE 预算要求交换机 <250 ns，TH5 大约 500 ns 做不到，才另做 Ultra。Field Day 上也说 TH6「没有 Ultra 那么低的时延」。TH6 是第一代 **多 die** Tomahawk（中间包处理核 + I/O chiplet），跨 die 只会让固有时延持平或略高于 TH5，不会突然砍半。网上把 TH6 写成 ~800 ns 的对比表，是转载估计，不是数据手册。
+
+对 Jalapeño 路径（只算交换机静态，空载）：
+
+```text
+Local  128：1 × TH6  ≈  0.5–1 μs
+Global 2048：2 × TH6  ≈  1–2 μs   + 一条光链路约 200–400 ns（见 §2.7）+ 光纤（约 5 ns/m）
+OCS：电路一旦建好，自身只有光程，ns 量级；重配是毫秒级，不算包时延
+```
+
+铜背板 Local 仍可能有 PAM4 FEC，但比跨柜可插拔光模块轻。排队、PFC、incast 是另一笔，Broadcom 给 TH6 主打的是这笔 **tail**，不是把 500 ns 砍成 250 ns。
+
+量级感：decode 一步常见是几十 μs 到 ms，**交换机静态不是大头**；小消息 collective 的 tail 才敏感。OpenAI 用 TH6 而不是 Ultra，是因为 Local 128 要 6×102.4T 的 radix 和共享缓存，Ultra 只有 51.2T，radix 不够。
+
+未公开：Jalapeño 机架里 TH6 实测 cut-through、是否开 FEC、Chana 背板是不是比面板光模块再短一截。
+
+### 2.7 光电转换一般多少时延
+
+激光器 / PD 本身只有 **约 1 ns**，可以忽略。人们说的「光电时延」几乎全是 **模块 DSP + 主机 FEC + 光纤**。
+
+一条光链路（源模块电→光 + 光纤 + 对端模块光→电）的端到端量级：
+
+| 代际 | 典型 e2e | 拆开 | 来源 |
+|---|---|---|---|
+| 400G（100G/lane，如 FR4） | **约 200 ns** | 模块 DSP ~100 ns + 主机 KP4 FEC ~100 ns | IEEE 802.3df 引用 Nagarajan JLT 2021 |
+| 800G / 1.6T（200G/lane） | **设计目标 <400 ns** | 模块侧可到 ~300 ns（含更强 FEC）；主机 KP4 仍 ~100 ns | IEEE 802.3df：800G/1.6T optics FEC 要求 |
+| 可插拔 DSP 模块（单独报 DSP） | **约 100–150 ns** | 均衡、CDR、重定时；不含主机 FEC | 800G 模块常见口径 |
+| LPO（无模块 DSP） | 模块电子 **<1–3 ns** | FEC 仍在交换机 ASIC 里，KP4 那 100 ns 还在 | LPO MSA / 厂商对比 |
+| CPO | 去掉可插拔和一段电走线 | 光电物理仍 ~1 ns；FEC 政策不变就不省那 100 ns | 架构选择，不是 Jalapeño 公开口径 |
+| 光纤传播 | **约 5 ns/m** | 10 m ≈ 50 ns；100 m ≈ 500 ns | 折射率 ~1.5 |
+| OCS | 电路一旦建好 **≈0**（只有光程） | 重配是毫秒，不算包时延 | MEMS/压电开关 |
+
+KP4（RS(544,514)）单独大约 **80–150 ns / 链路**，IEEE 材料里常写成 ~100 ns。200G/lane 还会叠 inner FEC：带卷积交织可再加到上百 ns，bypass 后大约 **+15 ns**。
+
+不要把「源端电→光」和「对端光→电」各算一次 FEC。FEC 是 **整条以太网链路编一次、解一次**。物理光电两次加起来仍是 ns 级。
+
+```text
+一条光跳（Jalapeño 跨柜就是一条，OCS 透明）：
+
+  TH6_A ── 主机 FEC 编码 ~50 ns
+       ── 1.6T 模块 DSP（TX）
+       ── 激光器 ~1 ns          ← 真正的「电→光」
+       ── 光纤 5 ns/m
+       ── OCS ~0
+       ── PD+TIA ~1 ns          ← 真正的「光→电」
+       ── 1.6T 模块 DSP（RX）
+       ── 主机 FEC 解码 ~50 ns
+  TH6_B
+
+  DSP 可插拔合计：约 200–400 ns（1.6T 按上限估）
+  LPO：模块 DSP 掉到几 ns，FEC ~100 ns 还在
+```
+
+对 Jalapeño：全局路径 **只有一条光跳**（两柜面板模块对打，中间 OCS 不转换）。相对 2× TH6 的 1–2 μs，光电是 **同量级偏小的一截**，不是主导。Local 128 走铜，没有模块 DSP；200G PAM4 铜背板仍可能有 KP4，但没有 100 ns 级的光 DSP。
+
+厂商把 DSP 模块写成 8–10 ns 时，通常 **没把主机 FEC 算进去**。对比时要看口径包不包括 KP4。
+
+未公开：Jalapeño 的 1.6T 是 DSP 可插拔、LPO 还是 CPO；inner FEC 开不开。公开口径是 front-panel transceiver，先按 DSP 可插拔、**每光跳 200–400 ns** 估。
 
 ---
 
@@ -275,6 +446,11 @@ GPT-OSS 高并发上 EP8 不是装不下，是把 128 个 expert 切开换吞吐
 - OpenAI，[Jalapeño’s first results](https://openai.com/index/jalapeno-first-results/)
 - Hot Chips 2026，*You Can Just Build Things … Chips*；现场记录见 [ServeTheHome](https://www.servethehome.com/openai-jalapeno-asic-at-hot-chips-2026/)
 - SemiAnalysis，[OpenAI Jalapeño: Better Than Nvidia Blackwell](https://newsletter.semianalysis.com/p/openai-jalapeno-better-than-nvidia)（2026-08-25）
+- Broadcom，[Tomahawk 6 / BCM78910](https://www.broadcom.com/products/ethernet-connectivity/switching/strataxgs/bcm78910-series)；[Tomahawk Ultra 250 ns](https://investors.broadcom.com/news-releases/news-release-details/broadcom-ships-tomahawk-ultra-reimagining-ethernet-switch-hpc)
+- Wheeler’s Network，[TH5 cut-through 约 500 ns，与 Ultra 架构拆分](https://www.wheelersnetwork.com/2025/07/broadcom-adds-new-architecture-with.html)
+- Arista，[7060X6 数据手册：TH5 整机 700 ns](https://www.arista.com/assets/data/pdf/Datasheets/7060X6-Datasheet.pdf)
+- IEEE 802.3df，[FEC Requirements for 800GbE/1.6TbE Optics](https://www.ieee802.org/3/df/public/22_07/yin_3df_01b_2207.pdf)（400G e2e ~200 ns；800G/1.6T 目标 <400 ns）
+- R. Nagarajan et al.，*Low Power DSP-Based Transceivers for Data Center Optical Fiber Communications*，JLT 39(16)，2021
 - NVIDIA，[Vera Rubin NVL72](https://www.nvidia.com/en-us/data-center/vera-rubin-nvl72/)
 - The Register / WCCFTech 对机架规格的转述
 - GPT-OSS 参数来自 OpenAI model card；Kimi K2.5 参数来自 Moonshot 公开 README
