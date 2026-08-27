@@ -128,7 +128,7 @@ GPU 上 Prefill / Decode 分离几乎是标配。Jalapeño 明确不用。
 ### 3.4 Scale-up 网络
 
 - **Local：** 机架内 128 卡 all-to-all，每卡单向 4.8 Tb/s，6× 102.4T TH6；每柜约 6144 对无源铜差分。全程电，XPU 不出光。
-- **Global：** 16 柜 / 2048 卡，每卡单向 1.6 Tb/s，8-rail、rail-only。XPU 仍走铜背板进全局 TH6，**光电转换在交换机面板 1.6T 光模块**，再进柜内 OCS 出柜。不是 XPU 封装出光。
+- **Global：** 16 柜 / 2048 卡，每卡单向 1.6 Tb/s，8-rail、rail-only。路径是 `XPU → 本柜全局 TH6（铜）→ 面板 1.6T 光模块 → OCS → 对端同样的 TH6 → 对端 XPU（铜）`。光电在 **两端交换机面板**，不是光直插对端卡；rail-only 省的是第三级 spine，不是对端 leaf。
 
 SemiAnalysis 的判断：scale-up 网络大约只占系统成本 10%，却买到未来 10–20T 参数 / 百万级上下文的期权。这和「超节点优先容纳高频并行组」是同一类判断。
 
