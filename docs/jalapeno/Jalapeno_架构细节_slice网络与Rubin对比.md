@@ -231,6 +231,38 @@ rail-only 改变的是 **少一层包交换**，不是取消对端 leaf：
 
 未公开：1.6T 模块是 OSFP / OSFP-XD 还是别的封装、有没有 CPO 上交换机（公开口径是 front-panel transceiver，按可插拔理解）、OCS 供应商和端口数、全局到底是 2 跳 leaf–leaf 还是少数场景把 OCS 配成更接近直连的电路。后一项即使更「直」，光电仍在两柜的交换机面板上，不在 XPU 上。
 
+### 2.6 TH6 静态时延大概多少
+
+**Broadcom 没有给 Tomahawk 6 公布 ns 级 cut-through 数字。** 产品页只写 low latency、以及共享缓存带来的 **最低 tail latency**——后者是排队/incast，不是空载固有时延。
+
+中文里说的「静态时延」一般对应：**空载、cut-through、port-to-port（有时含 SerDes 的 ball-to-ball）**，不含队列、不含光模块 DSP、也不含光纤。
+
+可对标的公开数字：
+
+| 芯片 | 带宽 | 时延口径 | 来源 | 怎么用 |
+|---|---|---|---|---|
+| **Tomahawk 4** | 25.6T | 芯片约 **450 ns**（不含 FEC）；FEC 再加约 150 ns | Linley 对 TH4 的估计 | 上上代，流水线同类 |
+| **Tomahawk 5** | 51.2T | 芯片 cut-through **约 500 ns** | Wheeler’s Network | 和 TH6 同一条 Tomahawk 主干 |
+| **Tomahawk 5 整机** | 51.2T | **700 ns** | Arista 7060X6 数据手册（Latency from 700 ns） | 系统级，含板级/部分开销，比芯片数字略高 |
+| **Tomahawk 6** | 102.4T | 官方无 ns；ODM 写 **sub-microsecond**（<1 μs） | Broadcom 产品页；STORDIS 等白盒 | 按 **0.5–1 μs / 跳** 估 |
+| **Tomahawk Ultra** | 51.2T | **250 ns**（官方） | Broadcom 新闻稿 / BCM78920 | **不是 TH6。** 新架构，给 HPC / 低时延 scale-up |
+
+**不要把 250 ns 安在 TH6 上。** Broadcom 自己把 Ultra 从 TH5/TH6 拆开：SUE 预算要求交换机 <250 ns，TH5 大约 500 ns 做不到，才另做 Ultra。Field Day 上也说 TH6「没有 Ultra 那么低的时延」。TH6 是第一代 **多 die** Tomahawk（中间包处理核 + I/O chiplet），跨 die 只会让固有时延持平或略高于 TH5，不会突然砍半。网上把 TH6 写成 ~800 ns 的对比表，是转载估计，不是数据手册。
+
+对 Jalapeño 路径（只算交换机静态，空载）：
+
+```text
+Local  128：1 × TH6  ≈  0.5–1 μs
+Global 2048：2 × TH6  ≈  1–2 μs   + 光模块 FEC（KP4 常见再 +100–200 ns/光跳）+ 光纤（约 5 ns/m）
+OCS：电路一旦建好，自身只有光程，ns 量级；重配是毫秒级，不算包时延
+```
+
+铜背板 Local 仍可能有 PAM4 FEC，但比跨柜可插拔光模块轻。排队、PFC、incast 是另一笔，Broadcom 给 TH6 主打的是这笔 **tail**，不是把 500 ns 砍成 250 ns。
+
+量级感：decode 一步常见是几十 μs 到 ms，**交换机静态不是大头**；小消息 collective 的 tail 才敏感。OpenAI 用 TH6 而不是 Ultra，是因为 Local 128 要 6×102.4T 的 radix 和共享缓存，Ultra 只有 51.2T，radix 不够。
+
+未公开：Jalapeño 机架里 TH6 实测 cut-through、是否开 FEC、Chana 背板是不是比面板光模块再短一截。
+
 ---
 
 ## 3. 整柜 vs Vera Rubin NVL72
@@ -371,6 +403,9 @@ GPT-OSS 高并发上 EP8 不是装不下，是把 128 个 expert 切开换吞吐
 - OpenAI，[Jalapeño’s first results](https://openai.com/index/jalapeno-first-results/)
 - Hot Chips 2026，*You Can Just Build Things … Chips*；现场记录见 [ServeTheHome](https://www.servethehome.com/openai-jalapeno-asic-at-hot-chips-2026/)
 - SemiAnalysis，[OpenAI Jalapeño: Better Than Nvidia Blackwell](https://newsletter.semianalysis.com/p/openai-jalapeno-better-than-nvidia)（2026-08-25）
+- Broadcom，[Tomahawk 6 / BCM78910](https://www.broadcom.com/products/ethernet-connectivity/switching/strataxgs/bcm78910-series)；[Tomahawk Ultra 250 ns](https://investors.broadcom.com/news-releases/news-release-details/broadcom-ships-tomahawk-ultra-reimagining-ethernet-switch-hpc)
+- Wheeler’s Network，[TH5 cut-through 约 500 ns，与 Ultra 架构拆分](https://www.wheelersnetwork.com/2025/07/broadcom-adds-new-architecture-with.html)
+- Arista，[7060X6 数据手册：TH5 整机 700 ns](https://www.arista.com/assets/data/pdf/Datasheets/7060X6-Datasheet.pdf)
 - NVIDIA，[Vera Rubin NVL72](https://www.nvidia.com/en-us/data-center/vera-rubin-nvl72/)
 - The Register / WCCFTech 对机架规格的转述
 - GPT-OSS 参数来自 OpenAI model card；Kimi K2.5 参数来自 Moonshot 公开 README
