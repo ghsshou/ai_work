@@ -253,7 +253,7 @@ rail-only 改变的是 **少一层包交换**，不是取消对端 leaf：
 
 ```text
 Local  128：1 × TH6  ≈  0.5–1 μs
-Global 2048：2 × TH6  ≈  1–2 μs   + 光模块 FEC（KP4 常见再 +100–200 ns/光跳）+ 光纤（约 5 ns/m）
+Global 2048：2 × TH6  ≈  1–2 μs   + 一条光链路约 200–400 ns（见 §2.7）+ 光纤（约 5 ns/m）
 OCS：电路一旦建好，自身只有光程，ns 量级；重配是毫秒级，不算包时延
 ```
 
@@ -262,6 +262,49 @@ OCS：电路一旦建好，自身只有光程，ns 量级；重配是毫秒级�
 量级感：decode 一步常见是几十 μs 到 ms，**交换机静态不是大头**；小消息 collective 的 tail 才敏感。OpenAI 用 TH6 而不是 Ultra，是因为 Local 128 要 6×102.4T 的 radix 和共享缓存，Ultra 只有 51.2T，radix 不够。
 
 未公开：Jalapeño 机架里 TH6 实测 cut-through、是否开 FEC、Chana 背板是不是比面板光模块再短一截。
+
+### 2.7 光电转换一般多少时延
+
+激光器 / PD 本身只有 **约 1 ns**，可以忽略。人们说的「光电时延」几乎全是 **模块 DSP + 主机 FEC + 光纤**。
+
+一条光链路（源模块电→光 + 光纤 + 对端模块光→电）的端到端量级：
+
+| 代际 | 典型 e2e | 拆开 | 来源 |
+|---|---|---|---|
+| 400G（100G/lane，如 FR4） | **约 200 ns** | 模块 DSP ~100 ns + 主机 KP4 FEC ~100 ns | IEEE 802.3df 引用 Nagarajan JLT 2021 |
+| 800G / 1.6T（200G/lane） | **设计目标 <400 ns** | 模块侧可到 ~300 ns（含更强 FEC）；主机 KP4 仍 ~100 ns | IEEE 802.3df：800G/1.6T optics FEC 要求 |
+| 可插拔 DSP 模块（单独报 DSP） | **约 100–150 ns** | 均衡、CDR、重定时；不含主机 FEC | 800G 模块常见口径 |
+| LPO（无模块 DSP） | 模块电子 **<1–3 ns** | FEC 仍在交换机 ASIC 里，KP4 那 100 ns 还在 | LPO MSA / 厂商对比 |
+| CPO | 去掉可插拔和一段电走线 | 光电物理仍 ~1 ns；FEC 政策不变就不省那 100 ns | 架构选择，不是 Jalapeño 公开口径 |
+| 光纤传播 | **约 5 ns/m** | 10 m ≈ 50 ns；100 m ≈ 500 ns | 折射率 ~1.5 |
+| OCS | 电路一旦建好 **≈0**（只有光程） | 重配是毫秒，不算包时延 | MEMS/压电开关 |
+
+KP4（RS(544,514)）单独大约 **80–150 ns / 链路**，IEEE 材料里常写成 ~100 ns。200G/lane 还会叠 inner FEC：带卷积交织可再加到上百 ns，bypass 后大约 **+15 ns**。
+
+不要把「源端电→光」和「对端光→电」各算一次 FEC。FEC 是 **整条以太网链路编一次、解一次**。物理光电两次加起来仍是 ns 级。
+
+```text
+一条光跳（Jalapeño 跨柜就是一条，OCS 透明）：
+
+  TH6_A ── 主机 FEC 编码 ~50 ns
+       ── 1.6T 模块 DSP（TX）
+       ── 激光器 ~1 ns          ← 真正的「电→光」
+       ── 光纤 5 ns/m
+       ── OCS ~0
+       ── PD+TIA ~1 ns          ← 真正的「光→电」
+       ── 1.6T 模块 DSP（RX）
+       ── 主机 FEC 解码 ~50 ns
+  TH6_B
+
+  DSP 可插拔合计：约 200–400 ns（1.6T 按上限估）
+  LPO：模块 DSP 掉到几 ns，FEC ~100 ns 还在
+```
+
+对 Jalapeño：全局路径 **只有一条光跳**（两柜面板模块对打，中间 OCS 不转换）。相对 2× TH6 的 1–2 μs，光电是 **同量级偏小的一截**，不是主导。Local 128 走铜，没有模块 DSP；200G PAM4 铜背板仍可能有 KP4，但没有 100 ns 级的光 DSP。
+
+厂商把 DSP 模块写成 8–10 ns 时，通常 **没把主机 FEC 算进去**。对比时要看口径包不包括 KP4。
+
+未公开：Jalapeño 的 1.6T 是 DSP 可插拔、LPO 还是 CPO；inner FEC 开不开。公开口径是 front-panel transceiver，先按 DSP 可插拔、**每光跳 200–400 ns** 估。
 
 ---
 
@@ -406,6 +449,8 @@ GPT-OSS 高并发上 EP8 不是装不下，是把 128 个 expert 切开换吞吐
 - Broadcom，[Tomahawk 6 / BCM78910](https://www.broadcom.com/products/ethernet-connectivity/switching/strataxgs/bcm78910-series)；[Tomahawk Ultra 250 ns](https://investors.broadcom.com/news-releases/news-release-details/broadcom-ships-tomahawk-ultra-reimagining-ethernet-switch-hpc)
 - Wheeler’s Network，[TH5 cut-through 约 500 ns，与 Ultra 架构拆分](https://www.wheelersnetwork.com/2025/07/broadcom-adds-new-architecture-with.html)
 - Arista，[7060X6 数据手册：TH5 整机 700 ns](https://www.arista.com/assets/data/pdf/Datasheets/7060X6-Datasheet.pdf)
+- IEEE 802.3df，[FEC Requirements for 800GbE/1.6TbE Optics](https://www.ieee802.org/3/df/public/22_07/yin_3df_01b_2207.pdf)（400G e2e ~200 ns；800G/1.6T 目标 <400 ns）
+- R. Nagarajan et al.，*Low Power DSP-Based Transceivers for Data Center Optical Fiber Communications*，JLT 39(16)，2021
 - NVIDIA，[Vera Rubin NVL72](https://www.nvidia.com/en-us/data-center/vera-rubin-nvl72/)
 - The Register / WCCFTech 对机架规格的转述
 - GPT-OSS 参数来自 OpenAI model card；Kimi K2.5 参数来自 Moonshot 公开 README
