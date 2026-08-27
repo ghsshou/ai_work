@@ -1,6 +1,6 @@
 # Jalapeño 架构细节：Slice、网络、并行与 Rubin NVL72 对比
 
-> **用途：** 补全系统洞察 PPT 里没展开的几处：为什么切 core/HBM slice、网卡到底是什么、整柜和 Vera Rubin NVL72 怎么比、所谓 PD 融合在公开材料里实际长什么样。  
+> **用途：** 补全系统洞察 PPT 里没展开的几处：为什么切 core/HBM slice、网卡到底是什么、XPU 出不出光、整柜和 Vera Rubin NVL72 怎么比、所谓 PD 融合在公开材料里实际长什么样。  
 > **日期：** 2026-08-26  
 > **口径：** 2026-08 Hot Chips / OpenAI 博客 / SemiAnalysis 实验室报道。未公布的数字会标明「估计」或「未披露」。  
 > **配套：** [`OpenAI_Jalapeno_芯片系统洞察.md`](./OpenAI_Jalapeno_芯片系统洞察.md) · [`PPT`](./OpenAI_Jalapeno_系统洞察.pptx)
@@ -125,15 +125,61 @@ OpenAI 官方点名 Broadcom Tomahawk 进平台；TH6 / 1.6T / OCS 的拆法来�
         ▼
   Vindaloo 8 卡
         │
-        │  封装上 32×200G SerDes，不是网卡
-        ├─ 24 lane / 4.8 Tb/s ──► 6× TH6 102.4T   机架 128 卡（TP）
-        └─  8 lane / 1.6 Tb/s ──► 全局 TH6 + 1.6T 光 + OCS
-                                      最多 16 柜 2048 卡（EP）
+        │  封装上 32×200G 电 SerDes，不是网卡，也不是光口
+        ├─ 24 lane / 4.8 Tb/s ──► 6× TH6 102.4T   全程铜  机架 128 卡（TP）
+        └─  8 lane / 1.6 Tb/s ──► 全局 TH6（仍是铜）
+                                      │
+                                      ▼
+                                 面板 1.6T 可插拔光模块   ← 光电转换在这里
+                                      │
+                                      ▼
+                                 柜内 OCS → 光纤出柜     最多 16 柜 2048 卡（EP）
 ```
 
 和 GB200/Rubin NVL72 对比：Nvidia 卡间是 NVLink + NVSwitch，北向才是网卡（通常每 GPU 一张 ConnectX）。Jalapeño 把卡间做成以太网交换（Tomahawk 6）当 scale-up，网卡只留在 CPU 柜做前端。
 
 未公开：NIC 品牌/SKU、是不是 RoCE、200G 口封装、有没有 SmartNIC/DPU、PCIe 是 x16 还是分叉。
+
+### 2.4 「铜缆 + OCS」不等于 XPU 出光
+
+**结论：Jalapeño 封装上没有光口。** 32 条 scale-up lane 全是电 SerDes，出封装后一律进铜背板。光电转换发生在 **全局 Chana 交换托盘的面板光模块** 上，不在 Vindaloo 加速器托盘上，更不在 XPU 封装上。
+
+容易混的点：跨框写「铜缆 + OCS」，听起来像卡自己出光。实际是 **两段介质**：
+
+1. **XPU → 本柜全局交换机：全程电。** 8 条 global lane 和 24 条 local lane 一样，走铜背板进 Chana / Tomahawk 6。
+2. **本柜交换机 → 别的柜：才变光。** TH6 面板上的 **1.6T 可插拔光模块** 做电→光，再进柜内 **OCS**，光纤出柜连到别的机架。
+
+OCS（optical circuit switch）只能切已经是光的信号。XPU 从不直接连 OCS。
+
+```text
+                    ┌─────────────── 本柜（电域）───────────────┐
+  Jalapeño XPU      │                                           │
+  I/O die           │  铜背板                                    │
+  32×200G 电 SerDes─┼──► Chana / TH6 ──► 本地 TH6：不出柜       │
+                    │                 │                         │
+                    │                 └──► 全局 TH6 面板         │
+                    │                      1.6T 光模块          │
+                    └──────────────────────┬────────────────────┘
+                                           │ 光
+                                           ▼
+                                      柜内 OCS
+                                           │ 光纤
+                                           ▼
+                                      别的机架 / 最多 2048 卡
+```
+
+| 如果「XPU 出光」会看到什么 | 公开材料实际写的 |
+|---|---|
+| 封装 CPO / 硅光引擎 | I/O die 是 **N3E + 电 SerDes** |
+| Vindaloo 托盘前面板有 QSFP / OSFP | 加速器托盘走 **铜背板**，类似 Nvidia Oberon |
+| 全局 8 lane 直接打光纤、绕过 TH6 | 全局仍先铜进 TH6，再 **面板 1.6T 模块** |
+| OCS 挂在卡上 | OCS 在 **机架里、交换机之后** |
+
+这和 Nvidia NVL72 / Oberon 是同一类拆法：加速器侧保持短距电互连（功耗、延迟、良率都更好），跨柜才在交换机面板上插光。差别只是 Jalapeño 的交换机是 Tomahawk 6 以太网，不是 NVSwitch。
+
+Local 128 卡 **永远不出光**。只有 EP 要跨柜时，才在全局 Chana 上做一次光电转换。
+
+未公开：1.6T 模块是 OSFP / OSFP-XD 还是别的封装、有没有 CPO 上交换机（公开口径是 front-panel transceiver，按可插拔理解）、OCS 供应商和端口数。
 
 ---
 
