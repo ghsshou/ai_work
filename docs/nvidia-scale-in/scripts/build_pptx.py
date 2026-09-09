@@ -11,7 +11,7 @@ from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.oxml.ns import qn
 from pptx.util import Inches, Pt
 
-OUT = "docs/nvidia-scale-in/NVIDIA_Scale_in_网络基础设施洞察.pptx"
+OUT = "docs/nvidia-scale-in/NVIDIA_Scale_in_网络基础设施洞察_v2.pptx"
 FONT = "微软雅黑"
 
 BG = RGBColor(0xF3, 0xF5, 0xF8)
@@ -223,7 +223,7 @@ def build():
     rect(s, 0, 0, Inches(0.18), H, GREEN)
     rect(s, 0, 0, W, Inches(0.08), GREEN)
     add_textbox(s, Inches(0.7), Inches(1.35), Inches(12), Inches(0.32),
-                "NVIDIA AI 网络第五支柱  ·  技术洞察", 14, True, GREEN_DK)
+                "NVIDIA AI 网络第五支柱  ·  技术洞察  ·  v2", 14, True, GREEN_DK)
     add_textbox(s, Inches(0.7), Inches(1.75), Inches(12), Inches(1.15),
                 "Scale-in：南北向网络的\n加速基础设施域", 32, True, INK)
     add_paras(s, Inches(0.7), Inches(3.15), Inches(11.8), Inches(1.35), [

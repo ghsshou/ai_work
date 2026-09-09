@@ -1,9 +1,10 @@
-# NVIDIA Scale-in 网络基础设施洞察
+# NVIDIA Scale-in 网络基础设施洞察（v2）
 
+> **版本：** v2（现行）。相对 [v1](./NVIDIA_Scale_in_网络基础设施洞察_v1.md) 补充 Spectrum-X 等产品预备知识，改为书面语气，并扩展公开来源。  
 > **用途：** 说明 Scale-in 在 NVIDIA AI 工厂网络中的位置、相对传统南北向网络的变化、处理原理、对应芯片与软件，以及对后续部署的影响。  
 > **日期：** 2026-09-09  
 > **口径窗口：** 2026-08 NVIDIA Technical Blog、Hot Chips 2026、FY2027 Q2 财报电话会，以及 Spectrum-X / DOCA / CMX / ConnectX-9 等既有产品文档。未公布的数字另行标明。  
-> **配套 PPT：** [`NVIDIA_Scale_in_网络基础设施洞察.pptx`](./NVIDIA_Scale_in_网络基础设施洞察.pptx)
+> **配套 PPT：** [`NVIDIA_Scale_in_网络基础设施洞察_v2.pptx`](./NVIDIA_Scale_in_网络基础设施洞察_v2.pptx)
 
 ---
 
