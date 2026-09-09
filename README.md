@@ -42,9 +42,9 @@ Hot Chips 2026 上 OpenAI 第一颗推理芯片的系统拆解：Serving 定位�
 
 📁 [`docs/nvidia-scale-in/`](./docs/nvidia-scale-in/)
 
-2026-08 NVIDIA 把 Scale-in 定为 AI 网络第五支柱：BlueField-4 + DOCA + Spectrum-X，把前端 / 南北向做成主机无关的安全与运营域。
+2026-08 NVIDIA 把 Scale-in 定为 AI 网络第五支柱：BlueField-4 + DOCA + Spectrum-X，把前端 / 南北向做成主机无关的安全与运营域。文稿含 Spectrum-X 等产品预备知识。
 
-- [`配套PPT（24页，浅色）`](./docs/nvidia-scale-in/NVIDIA_Scale_in_网络基础设施洞察.pptx)
+- [`配套PPT（28页，浅色）`](./docs/nvidia-scale-in/NVIDIA_Scale_in_网络基础设施洞察.pptx)
 - [`Markdown 文字版`](./docs/nvidia-scale-in/NVIDIA_Scale_in_网络基础设施洞察.md)
 
 ## 本地同步
