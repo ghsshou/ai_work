@@ -238,9 +238,27 @@ V4 是 **CSA + HCA 混合**；V4.1-Flash 改成 **纯 CSA2**。CSA2 同时压三
 2. **序列维**：每 \(r\) 个 token 压成一个 main KV entry
 3. **层维**：跨层共享 KV 和 Top-K 索引（这是 CSA2 的新轴）
 
-### 三种静态模式
+一句话：每一层不再「全序列、自己存一份 KV」，而是 **先用一个小 indexer 选出最相关的若干条全局 KV，再和本层局部窗口一起做注意力；相邻层还可以共用这份全局 KV，甚至共用「选了谁」。**
 
-每一层固定成 Full / Reindex / Reuse 之一。**所有模式都自己算 main Q 和本层 SWA KV**，差别只在全局 KV 和索引从哪来。
+### 一层 CSA2 里其实有三样东西
+
+对当前 token 的 query 来说，注意力不是扫完全文，而是两路拼接：
+
+| 东西 | 干什么 | 贵在哪 |
+|------|--------|--------|
+| **Indexer** | 用很小的 \(Q_{idx}, K_{idx}\) 给每条 main KV 打分，取出 Top-K | 打分次数随上下文变长 |
+| **Main KV** | 被选中的全局压缩 KV，给真正的注意力用 | 存储随层数 × 序列变长 |
+| **SWA KV** | 本层最近 \(n_{win}=128\) 个 token 的局部 KV | 窗口固定，不随总长度涨 |
+
+真正的注意力是：
+
+\[
+\text{Attn}(Q_{\text{本层}},\; \underbrace{\text{Top-K 选中的 main KV}}_{\text{全局稀疏}} \;\cup\; \underbrace{\text{本层 SWA KV}}_{\text{局部窗口}})
+\]
+
+三种模式 **都自己算** \(Q_{\text{本层}}\) 和本层 SWA；差别只在 main KV、indexer K、Top-K 从哪来。
+
+### 三种静态模式
 
 - **Full**：本层算 main KV、indexer Q；indexer K 从 main KV 投影；跑 indexer 得到新 Top-K。
 - **Reindex**：复用最近 Full 层的 main KV 和 indexer K，但用本层 indexer Q **重新打分**，选出新的 Top-K。KV 共享，选择可变。
@@ -255,18 +273,129 @@ Reuse 层推理时非常干净：Prefill **15 个 kernel**，Decode **11 个 ker
 
 ### 相对 CSA 的简化
 
-- 压缩不再 overlap，也不再给压缩窗口加绝对位置编码
+- 压缩不再 overlap，也不再给压缩窗口加绝对位置编码：\(r=2\) 就是每 2 个 token 收成 1 条，互不重叠
 - indexer K **直接从 main KV 投影**，不再另开一条从 hidden state 压缩的路径
 
 实现更简单，训练也更高效。
 
+### 例子：8 个 token，看「吗」这一层在看谁
+
+还用上一节那句 prompt，当成 8 个 token：
+
+```
+T1 用户  T2 问  T3 巴黎  T4 是  T5 法国  T6 的  T7 首都  T8 吗
+```
+
+玩具参数（真模型只是数字变大，流程一样）：
+
+- 压缩比 \(r=2\) → 8 个 token 收成 **4 条** main KV
+- Top-K = **2**（真模型是 512）
+- SWA 窗口 = **3**（真模型是 128）
+- 先看 encoder 里一组 3 层：L3 Full，L4 Reuse，L5 Reuse（真模型是 1 Full + 5 Reuse）
+
+4 条压缩后的全局条目：
+
+```
+E0 = (用户, 问)
+E1 = (巴黎, 是)
+E2 = (法国, 的)
+E3 = (首都, 吗)
+```
+
+当前 query 是最后一个 token「吗」。局部窗口 SWA 永远是最近 3 个：`的, 首都, 吗`。
+
+#### L3 Full：自己造库、自己检索
+
+1. 用本层 hidden state 生成 4 条 main KV，再从 main KV 投影出 indexer K。这两份都要写入全局缓存。
+2. 用本层很小的 indexer Q 去给 4 条打分，假设得到：
+
+   | 条目 | 分数 | 含义 |
+   |------|------|------|
+   | E0 (用户,问) | 0.10 | 和「首都吗」关系不大 |
+   | E1 (巴黎,是) | 0.95 | 很相关 |
+   | E2 (法国,的) | 0.40 | 一般 |
+   | E3 (首都,吗) | 0.80 | 相关 |
+
+   Top-2 = **E1, E3**。记下这两个下标，这就是 Top-K 索引。
+
+3. 本层真正的注意力 Q 不去扫 8 个 token，只看：
+
+   ```
+   全局稀疏:  E1 (巴黎,是) + E3 (首都,吗)
+   局部窗口:  的, 首都, 吗
+   ```
+
+Full 层干了三件贵的事：写出全局 KV、全量打分、选出 Top-K。后面的 Reuse 层都在吃这三样的饭。
+
+#### L4 / L5 Reuse：库和检索结果都不重做
+
+Reuse **不再写** 自己的 main KV，**也不跑** indexer。
+
+L4 做的只有：
+
+- 用 **自己的** Q（L4 的表示已经和 L3 不同）
+- 去注意 **同一份** `{E1, E3}`
+- 再拼上 **L4 自己的** 最近 3 个 SWA KV
+
+L5 同理。直觉是：邻近几层要找的「长程相关 token」往往还是那几个（这里还是「巴黎是」「首都吗」），不必每层重新建库、重新搜；但每层的 Q 和局部窗口不同，所以变换仍然在发生。
+
+存储上：这一组 3 层只存 **1 份** 全局 KV，不是 3 份。真模型 encoder 每 6 层存 1 份，全局 KV 大约能降到原来的 1/6（再叠 FP4 和 decoder 的层间共享）。
+
+#### Decoder 的 Reindex：库不变，换一个问题再搜一次
+
+Encoder 组里没有 Reindex；Reindex 出现在 decoder。另外 decoder 的压缩比 \(r=1\)，main KV 和 token 一一对应，8 个 token 就是 8 条，不再两两合并。
+
+接上 CED：decoder 的这份 main KV **不是 decoder 自己一层层算出来的**，而是从 encoder 末层 \(h_{20}\) 投影出来的。所以 decoder 的 Full 仍然要做一次「全序列检索」，但不必再为全局 KV 跑 decoder 的注意力和 MoE。
+
+玩具 decoder 一组 4 层：L21 Full，L22–L24 Reuse。下一组：L25 Reindex，L26–L28 Reuse。
+
+L21 Full 对 8 条逐条打分，假设 Top-2 = `巴黎, 首都`，后面三层 Reuse 都盯着这两个词。
+
+到了 L25，模型更深了，可能更想核对「法国」而不是「巴黎」。Reindex 的做法是：
+
+- **main KV、indexer K 仍用 L21 那一份**（不新建库）
+- 用 **L25 自己的 indexer Q** 重新打分
+- 选出新的 Top-2，比如 `法国, 首都`
+- L26–L28 Reuse 就改用这组新下标，KV 还是 L21 的
+
+这就是报告说的「cache sharing 和 index reuse 解耦」：
+
+| 模式 | 全局 KV | 选谁（Top-K） | 本层 Q / SWA |
+|------|---------|---------------|--------------|
+| Full | 新建 | 新建 | 本层 |
+| Reindex | 复用 Full | 新建 | 本层 |
+| Reuse | 复用 Full | 复用最近一次 Full/Reindex | 本层 |
+
+如果只有 Reuse，20 层 decoder 会盯死同一批 token；穿插 Reindex，等于「同一座图书馆，换个检索词再查一遍」，不必为每一层复制整座图书馆。
+
 ### Hierarchical Sparse Indexer（仅 Decoder）
 
-跨层 reuse 减少了 indexer 次数，但剩下的 indexer 仍要对全上下文打分，1M 上下文时这会再次成为瓶颈。
+跨层 reuse 减少了 indexer 次数，但剩下的 Full / Reindex 若仍对 **全上下文** 打分，1M 长度时打分本身又会爆。Decoder 因此加了分层检索，而且是 train-aware 的：训练和推理用同一套候选限制。
 
-做法：Decoder 第一个 Full 层对全序列打分，选出自己的 Top-512，同时按 **block max score** 选出最多 2048 个 block（每 block 8 个位置），组成最多 **16384** 的候选池。后续 Reindex 层只在这个池里打分选 Top-512。
+还用 8 个 token 把数字缩小：
 
-于是：第一层仍是 \(O(T)\)，后面 indexer 变成 **与上下文长度无关的常数开销**。这个机制是 **train-aware** 的，后训练阶段训练和推理用同一套候选限制。
+1. L21 Full 先对全部 8 条打分，选出自己的 Top-2，同时按 **block 内最高分** 挑出几个 block，把里面的位置收成 **候选池**（真模型：最多 2048 个 block × 8 位置 = **16384** 个候选；Top-K 仍是 512）。
+2. 玩具里假设池子是 `{巴黎, 是, 法国, 首都}`，丢掉了 `{用户, 问, 的, 吗}`。
+3. 后面的 L25 / L29 / … Reindex **只在这 4 个候选上打分**，再各自选出 Top-2。它们不能突然翻出池子外的「用户」，检索成本与总长度无关。
+
+对应到 1M 上下文：
+
+- 第一个 Full：仍然扫完全程，\(O(T)\)
+- 之后每个 Reindex：只打 16384 分，**常数开销**
+- 中间的 Reuse：连这 16384 也不打
+
+所以长上下文 decode 时，真正随长度线性变贵的，主要只剩 decoder 里那一次 Full 检索；后面层被 CSA2 的复用和候选池一起按住。
+
+### 和 CED 叠在一起时，Prefill 在干什么
+
+对很长的 prompt：
+
+1. Encoder 的 Full 层写出压缩 main KV，Reuse 层共享它
+2. CED 用 \(h_{20}\) 给 decoder 投影出 decoder 的全局 KV（decoder Full 的那一份）
+3. Decoder 第一个 Full 做一次全量索引，并建好 16384 候选池
+4. Decoder 其余 Reindex / Reuse 不再建库；绝大多数 token 也不跑 decoder 的 MoE
+
+CSA2 管的是「KV 存几份、检索扫多宽」；CED 管的是「后 20 层还要不要为 prompt 做整层计算」。两件事打的是不同账单。
 
 ---
 
