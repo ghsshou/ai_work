@@ -2,10 +2,12 @@
 
 面向 AI 集群整体系统设计（设计态，离线、无实时约束）的仿真器立项材料。底层 NPU / 内存存储 / 网络仿真已具备，本材料聚焦核心：**负载的画像、生成与导入**。
 
-| 文件 | 说明 |
-|---|---|
-| [设计态仿真器_负载引擎立项.pptx](./设计态仿真器_负载引擎立项.pptx) | 第 1 页为主页（分层架构图）；第 2 页为备份页（技术展开表 + 立项目标） |
-| [build_pptx.py](./scripts/build_pptx.py) | 生成脚本 |
+| 版本 | 文件 | 说明 |
+|---|---|---|
+| **v2（现行）** | [PPT](./设计态仿真器_负载引擎立项_v2.pptx) · [build_pptx.py](./scripts/build_pptx.py) | 架构图收至左侧 2/3 版面（右侧预留）；每个模块精简为 4 个子框 |
+| v1（归档） | [PPT](./设计态仿真器_负载引擎立项_v1.pptx) · [build_pptx_v1.py](./scripts/build_pptx_v1.py) | 全幅分层架构图，模块 5–6 个子框 |
+
+后续迭代按 v3、v4… 新增文件，旧版本保留不删。
 
 ## 主页结构
 
@@ -22,6 +24,8 @@
 5. 统一负载 IR 与多保真导入
 6. 基于实测对标的闭环校准（接收仿真内核结果回流）
 
+v2 中①②③为三列、各 4 个纵向子框；④⑤⑥为横向行，各 4 个子框。
+
 备份页为六项技术展开表（关键问题 / 技术路线 / 业界参考 / 难点）与立项目标。
 
 ## 待确认
@@ -34,5 +38,6 @@
 
 ```bash
 pip install python-pptx
-python3 docs/design-simulator/scripts/build_pptx.py
+python3 docs/design-simulator/scripts/build_pptx.py      # v2
+python3 docs/design-simulator/scripts/build_pptx_v1.py   # v1
 ```
