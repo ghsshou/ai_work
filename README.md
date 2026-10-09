@@ -45,9 +45,13 @@ Hot Chips 2026 上 OpenAI 第一颗推理芯片的系统拆解：Serving 定位�
 立项材料：设计态仿真器以负载引擎为核心——模型画像、到达与请求分布、Trace 拟合与外推、负载数据工厂、统一负载 IR 与闭环校准。
 
 - 画框图的 skill：[`.cursor/skills/pptx-layered-arch-diagram/`](./.cursor/skills/pptx-layered-arch-diagram/SKILL.md)
-- 立项单页的 skill：[`.cursor/skills/charter-maker/`](./.cursor/skills/charter-maker/SKILL.md)（材料在 [`materials/framework-dag.md`](./.cursor/skills/charter-maker/materials/framework-dag.md)）
-- [`v2 PPT（现行）`](./docs/design-simulator/设计态仿真器_负载引擎立项_v2.pptx) · [`v1 PPT（归档）`](./docs/design-simulator/设计态仿真器_负载引擎立项_v1.pptx)
-- [`框架侧 DAG 仿真能力 v3（现行）`](./docs/design-simulator/设计态仿真器_框架DAG仿真能力_v3.pptx) · [`v2（归档）`](./docs/design-simulator/设计态仿真器_框架DAG仿真能力_v2.pptx) · [`v1（归档）`](./docs/design-simulator/设计态仿真器_框架DAG仿真能力_v1.pptx)
+- [`负载引擎立项 v2 PPT（现行）`](./docs/design-simulator/设计态仿真器_负载引擎立项_v2.pptx) · [`v1 PPT（归档）`](./docs/design-simulator/设计态仿真器_负载引擎立项_v1.pptx)
+
+框架侧 DAG 是另一页，材料不和负载引擎立项共用文件名。
+
+- 文字材料：[`框架侧DAG仿真能力.md`](./docs/design-simulator/框架侧DAG仿真能力.md)
+- 版式 skill：[`.cursor/skills/charter-maker/`](./.cursor/skills/charter-maker/SKILL.md)
+- [`框架侧 DAG 仿真能力 v3 PPT（现行）`](./docs/design-simulator/设计态仿真器_框架DAG仿真能力_v3.pptx) · [`v2（归档）`](./docs/design-simulator/设计态仿真器_框架DAG仿真能力_v2.pptx) · [`v1（归档）`](./docs/design-simulator/设计态仿真器_框架DAG仿真能力_v1.pptx)
 
 ## Grok Bot 微信插件（安全补丁版）
 

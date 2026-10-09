@@ -7,7 +7,7 @@ description: Use when the user asks for a 立项, charter, or proposal slide, a 
 
 一页 16:9。标题下是三行横幅，左半页是有先后的框图，右半页是三项关键技术。框里只写技术点名称，先后写在框外。
 
-绘图用 `pptx-layered-arch-diagram` 的 `arch_kit.py` 和 `render.sh`。配色用 AICO-PPT，不要蓝 / 橙 / 绿彩虹。本仓库这一页的文字在 `materials/framework-dag.md`，现行生成脚本是 `docs/design-simulator/scripts/build_framework_dag_v3.py`。
+绘图用 `pptx-layered-arch-diagram` 的 `arch_kit.py` 和 `render.sh`。配色用 AICO-PPT，不要蓝 / 橙 / 绿彩虹。框架侧这一页的文字在 `docs/design-simulator/框架侧DAG仿真能力.md`，生成脚本是 `docs/design-simulator/scripts/build_framework_dag_v3.py`。负载引擎那一页仍是 `设计态仿真器_负载引擎立项_*.pptx` 和 `scripts/build_pptx.py`，两套名字不要混用。
 
 ## 页面分区
 
@@ -67,7 +67,7 @@ description: Use when the user asks for a 立项, charter, or proposal slide, a 
 
 ## 改版
 
-版本只增不删。新的 PPT 和生成脚本用下一个编号，旧文件留着，并更新 `docs/design-simulator/README.md` 的版本表。改文字时先改 `materials/` 里对应材料，再改脚本。
+版本只增不删。新的 PPT 和生成脚本用下一个编号，旧文件留着，并更新 `docs/design-simulator/README.md` 的版本表。改框架侧这一页的文字时，先改 `docs/design-simulator/框架侧DAG仿真能力.md`，再改 `build_framework_dag_v*.py`。不要改到 `build_pptx.py` 或 `设计态仿真器_负载引擎立项_*.pptx`。
 
 生成后运行：
 

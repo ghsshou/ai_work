@@ -1,6 +1,8 @@
 # 框架侧 DAG 仿真能力
 
-立项单页。现行成稿是 [`设计态仿真器_框架DAG仿真能力_v3.pptx`](../../../../docs/design-simulator/设计态仿真器_框架DAG仿真能力_v3.pptx)，脚本是 [`build_framework_dag_v3.py`](../../../../docs/design-simulator/scripts/build_framework_dag_v3.py)。v1、v2 保留，不覆盖。
+立项单页的文字材料。和负载引擎立项（`设计态仿真器_负载引擎立项_*.pptx`、`scripts/build_pptx.py`）不是同一页，文件名不要混用。
+
+现行成稿是 [`设计态仿真器_框架DAG仿真能力_v3.pptx`](./设计态仿真器_框架DAG仿真能力_v3.pptx)，脚本是 [`build_framework_dag_v3.py`](./scripts/build_framework_dag_v3.py)。v1、v2 保留，不覆盖。
 
 这一页不接仿真核。输入层进入 DAG 引擎，下面是输出层。
 
