@@ -44,6 +44,7 @@ Hot Chips 2026 上 OpenAI 第一颗推理芯片的系统拆解：Serving 定位�
 
 立项材料：设计态仿真器以负载引擎为核心——模型画像、到达与请求分布、Trace 拟合与外推、负载数据工厂、统一负载 IR 与闭环校准。
 
+- 画框图的 skill：[`.cursor/skills/pptx-layered-arch-diagram/`](./.cursor/skills/pptx-layered-arch-diagram/SKILL.md)
 - [`v2 PPT（现行）`](./docs/design-simulator/设计态仿真器_负载引擎立项_v2.pptx) · [`v1 PPT（归档）`](./docs/design-simulator/设计态仿真器_负载引擎立项_v1.pptx)
 
 ## NVIDIA Scale-in 网络基础设施
