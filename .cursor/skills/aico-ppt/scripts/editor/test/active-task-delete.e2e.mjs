@@ -1,0 +1,55 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {startFixtureServer,openEditor} from './test-helpers.mjs';
+import {resolveEditingContext} from '../dsh-editing-context.mjs';
+import {installEditingTools} from '../../../integrations/dsh/editing-tools.mjs';
+import {createDshAgentRunAdapter} from '../dsh-agent-run-adapter.mjs';
+test('已提交的 DSH 批次可从右侧取消等待并删除任务，不改变 Deck', async t => {
+ let app;
+ const adapter=createDshAgentRunAdapter({getSession:()=>app.session,getAssignedSessionId:()=> 's',
+  publishRequest:r=>queueMicrotask(()=>adapter.acknowledge({requestId:r.requestId,accepted:true})),runTimeoutMs:30000});
+ app=await startFixtureServer({agentRunAdapter:adapter,autoStartAgentTerminal:false});t.after(()=>app.close());
+ const {browser,page}=await openEditor(app);t.after(()=>browser.close());
+ const heading=page.frameLocator('#deck-frame').locator('h2').first();
+ const before=await heading.textContent();
+ const target=await heading.evaluate(el=>window.HuaweiDeckPatchRuntime.makeLocator(el));
+ const response=await fetch(new URL('/api/tasks',app.url),{method:'POST',headers:{authorization:`Bearer ${app.token}`,'content-type':'application/json'},body:JSON.stringify({expectedRevision:app.session.revision,pageKey:target.pageKey,pageIndex:1,pageLabel:'封面',rect:{x:1,y:1,w:300,h:200},instruction:'要删除的任务'})});
+ const {task}=await response.json();
+ await app.agentRuns.submit({expectedRevision:app.session.revision,taskIds:[task.id]});
+ await page.waitForFunction(()=>document.querySelector('[data-task-pending-count]')?.textContent.includes('处理中'));
+ const stale=await fetch(new URL(`/api/tasks/${task.id}`,app.url),{method:'DELETE',headers:{authorization:`Bearer ${app.token}`,'content-type':'application/json'},body:JSON.stringify({expectedRevision:0,cancelActiveBatch:true})});
+ assert.equal(stale.status,409);
+ assert.ok(app.agentRuns.snapshot().activeBatch,'过期的删除请求不能取消批次');
+ const remove=page.locator(`[data-task-delete="${task.id}"]`);
+ assert.equal(await remove.isEnabled(),true,'正在处理的任务必须提供可用的取消并删除入口');
+ await remove.click();
+ await page.locator(`[data-task-delete-confirm="${task.id}"]`).click();
+ await page.waitForFunction(id=>!document.querySelector(`[data-task-row="${CSS.escape(id)}"]`),task.id);
+ assert.equal(app.agentRuns.snapshot().activeBatch,null);
+ assert.equal(app.session.agentBatches[0].settlement.outcome,'cancelled');
+ assert.equal(await heading.textContent(),before);
+ // 再次提交后，左侧工具也能解除等待并删除；旧 taskId 的迟到写入被拒绝。
+ const post=async(path,body)=>fetch(new URL(path,app.url),{method:'POST',headers:{authorization:`Bearer ${app.token}`,'content-type':'application/json'},body:JSON.stringify(body)});
+ const created=await (await post('/api/tasks',{expectedRevision:app.session.revision,pageKey:target.pageKey,pageIndex:1,pageLabel:'封面',rect:{x:1,y:1,w:300,h:200},instruction:'从左侧删除'})).json();
+ await app.agentRuns.submit({expectedRevision:app.session.revision,taskIds:[created.task.id]});
+ const resolveContext=()=>resolveEditingContext({sessionId:'s',workCatalog:{resolveByDshSession:async()=>({kind:'editing',workId:'w',deckPath:app.deckPath})},findEditingRuntime:()=>({app})});
+ let tool;
+ installEditingTools({tools:{register:v=>{tool=v;}}},'http://localhost/?token=test',{
+  request:(url,options)=>new URL(url).pathname.includes('editing-context')?Promise.resolve({ok:true,json:resolveContext}):fetch(url,options)});
+ const exec={agent:{session:{id:'s'}},signal:AbortSignal.timeout(30000)};
+ const listed=await tool.execute({operation:'tasks'},exec);
+ assert.equal(listed.activeBatch.taskIds[0],created.task.id);
+ const deleted=await tool.execute({operation:'delete_task',workId:listed.workId,taskId:created.task.id,expectedRevision:listed.revision,cancelActiveBatch:true},exec);
+ assert.equal(deleted.revision,app.session.revision);
+ assert.equal(app.session.tasks.length,0);
+ const late=await post('/api/actions',{expectedRevision:app.session.revision,taskId:created.task.id,actions:[{id:crypto.randomUUID(),taskId:created.task.id,target,kind:'setText',payload:{text:'迟到写入'}}]});
+ assert.equal(late.status,404);
+ const retained=await (await post('/api/tasks',{expectedRevision:app.session.revision,pageKey:target.pageKey,pageIndex:1,pageLabel:'封面',rect:{x:1,y:1,w:300,h:200},instruction:'取消等待但保留任务'})).json();
+ await app.agentRuns.submit({expectedRevision:app.session.revision,taskIds:[retained.task.id]});
+ await page.locator('[data-cancel-batch]').click();
+ await page.waitForFunction(()=>!document.querySelector('[data-cancel-batch]'));
+ assert.equal(app.agentRuns.snapshot().activeBatch,null);
+ assert.equal(app.session.tasks[0].id,retained.task.id);
+ assert.equal(await page.locator(`[data-task-delete="${retained.task.id}"]`).isEnabled(),true);
+ assert.equal(await heading.textContent(),before);
+});

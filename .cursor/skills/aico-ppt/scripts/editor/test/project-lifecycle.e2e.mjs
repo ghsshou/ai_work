@@ -1,0 +1,33 @@
+import assert from 'node:assert/strict';
+import { mkdtemp, writeFile, readFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import test from 'node:test';
+import { loadChromium } from '../../verify/load-playwright.mjs';
+import { startAppServer } from '../app-server.mjs';
+import { WorkCatalog } from '../work-catalog.mjs';
+
+test('项目首页移除末项后立即显示恢复入口，刷新不复活且原文件保留', { timeout:30_000 }, async t => {
+  const root = await mkdtemp(join(tmpdir(), 'ppt-lifecycle-ui-'));
+  const deckPath = join(root, '生命周期测试.html');
+  await writeFile(deckPath, '<!doctype html>');
+  const history = { async list() { return { creation:[], editing:[{ deckPath, projectRoot:root }] }; } };
+  const catalog = new WorkCatalog({ filePath:join(root, 'catalog.json'), legacyHistory:history });
+  const app = await startAppServer({ token:'lifecycle-ui-fixture', workHistoryStore:history, workCatalog:catalog });
+  const chromium = await loadChromium();
+  const browser = await chromium.launch({ channel:'chrome', headless:true });
+  t.after(async () => { await browser.close(); await app.close(); await rm(root, { recursive:true, force:true }); });
+  const page = await browser.newPage();
+  page.on('dialog', dialog => dialog.accept());
+  await page.goto(app.appUrl);
+  await page.getByRole('button', { name:'移除项目 生命周期测试.html' }).click();
+  await page.locator('#removed-projects summary').waitFor({ state:'visible' });
+  assert.equal(await page.locator('[data-dismiss-work]').count(), 0);
+  await page.locator('#removed-projects summary').click();
+  assert.equal(await page.getByRole('button', { name:'恢复项目', exact:true }).isVisible(), true);
+  await page.reload();
+  await page.locator('#removed-projects summary').waitFor({ state:'visible' });
+  assert.equal(await page.locator('[data-dismiss-work]').count(), 0);
+  assert.equal((await catalog.listRemoved())[0].lifecycle, 'removed');
+  assert.equal(await readFile(deckPath, 'utf8'), '<!doctype html>');
+});

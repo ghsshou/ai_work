@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="zh-CN" data-dsh-work-item-coordinator="__DSH_WORK_ITEM_COORDINATOR__">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AICO-PPT</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/editor/ui-font.css">
+  <!-- dev-shell-terminal:start -->
+  <link rel="stylesheet" href="/editor/xterm.css">
+  <!-- dev-shell-terminal:end -->
+  <link rel="stylesheet" href="/editor/editor.css">
+  <link rel="stylesheet" href="/editor/guided-tour.css">
+  <link rel="stylesheet" href="/editor/agent-terminal-panel.css">
+  <link rel="stylesheet" href="/editor/pill-nav.css">
+</head>
+<body>
+  <svg class="glass-filter-defs" width="0" height="0" aria-hidden="true">
+    <filter id="glassRipple" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.009 0.012" numOctaves="2" seed="7"
+        stitchTiles="stitch" result="noise"></feTurbulence>
+      <feGaussianBlur in="noise" stdDeviation="1" result="snoise"></feGaussianBlur>
+      <feImage preserveAspectRatio="none" result="map" x="0" y="0" width="100%" height="100%"
+        href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='100'%20height='100'%20preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient%20id='gx'%20x1='0'%20x2='1'%3E%3Cstop%20offset='0'%20stop-color='rgb(205,0,0)'/%3E%3Cstop%20offset='0.30'%20stop-color='rgb(128,0,0)'/%3E%3Cstop%20offset='0.70'%20stop-color='rgb(128,0,0)'/%3E%3Cstop%20offset='1'%20stop-color='rgb(51,0,0)'/%3E%3C/linearGradient%3E%3ClinearGradient%20id='gy'%20x1='0'%20y1='0'%20x2='0'%20y2='1'%3E%3Cstop%20offset='0'%20stop-color='rgb(0,205,0)'/%3E%3Cstop%20offset='0.30'%20stop-color='rgb(0,128,0)'/%3E%3Cstop%20offset='0.70'%20stop-color='rgb(0,128,0)'/%3E%3Cstop%20offset='1'%20stop-color='rgb(0,51,0)'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect%20width='100'%20height='100'%20fill='black'/%3E%3Crect%20width='100'%20height='100'%20fill='url(%23gx)'%20style='mix-blend-mode:screen'/%3E%3Crect%20width='100'%20height='100'%20fill='url(%23gy)'%20style='mix-blend-mode:screen'/%3E%3C/svg%3E"></feImage>
+      <feGaussianBlur in="map" stdDeviation="4" result="smap"></feGaussianBlur>
+      <feDisplacementMap in="SourceGraphic" in2="smap" scale="16" xChannelSelector="R"
+        yChannelSelector="G" result="edged"></feDisplacementMap>
+      <feDisplacementMap in="edged" in2="snoise" scale="22" xChannelSelector="R"
+        yChannelSelector="G"></feDisplacementMap>
+    </filter>
+  </svg>
+  <main class="editor-shell" data-page-panel-collapsed="true"
+    data-inspector-state="hidden" data-inspector-dock="right">
+    <header class="topbar">
+      <div class="brand-block">
+        <img class="brand-logo" src="/editor/huawei-logo.png" alt="Huawei">
+        <span class="topbar-divider" aria-hidden="true"></span>
+        <div>
+          <h1>AICO-PPT</h1>
+          <span class="dev-shell-badge" title="独立开发与故障排查入口">DEV SHELL</span>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <nav class="workspace-navigation" data-workspace-navigation hidden aria-label="工作台导航">
+          <button class="workspace-navigation-button" type="button" data-workspace-home
+            aria-label="返回初始页" title="返回初始页"
+            data-toolbar-tooltip="返回初始页"
+            data-pill-nav data-pill-variant="neutral" data-pill-size="md" data-pill-kind="action">
+            <svg class="topbar-control-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m4 10 8-6 8 6"></path><path d="M6.5 9.5V20h11V9.5"></path>
+              <path d="M9.5 20v-6h5v6"></path>
+            </svg>
+            <span class="topbar-control-label">初始页</span>
+          </button>
+          <button class="workspace-navigation-button" type="button" data-workspace-switch
+            aria-label="切换项目" title="切换项目"
+            data-toolbar-tooltip="切换项目"
+            data-pill-nav data-pill-variant="neutral" data-pill-size="md" data-pill-kind="action">
+            <svg class="topbar-control-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 7h13"></path><path d="m15 4 3 3-3 3"></path>
+              <path d="M19 17H6"></path><path d="m9 14-3 3 3 3"></path>
+            </svg>
+            <span class="topbar-control-label">切换项目</span>
+          </button>
+        </nav>
+        <div class="current-project-context" data-current-project hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 3.5h8l4 4V20.5H6z"></path>
+            <path d="M14 3.5v4h4M9 12h6M9 15.5h6"></path>
+          </svg>
+          <span data-current-project-name></span>
+        </div>
+        <div class="dsh-session-control" data-dsh-session-control hidden data-state="loading">
+          <span class="dsh-session-dot" aria-hidden="true"></span>
+          <select data-dsh-session-select aria-label="此 Deck 的活动 DSH 会话"
+            title="此 Deck 的活动 DSH 会话"></select>
+        </div>
+        <span class="topbar-action-spacer" aria-hidden="true"></span>
+        <div class="history-controls" role="group" aria-label="修改历史" data-busy="false">
+          <button class="history-button" type="button" data-history-undo disabled
+            title="撤销 · Cmd/Ctrl+Z" data-toolbar-tooltip="撤销 · Cmd/Ctrl+Z"
+            aria-keyshortcuts="Meta+Z Control+Z"
+            data-pill-nav data-pill-variant="neutral" data-pill-size="md" data-pill-kind="action">
+            <svg class="topbar-control-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m8 7-4 4 4 4"></path><path d="M5 11h8a6 6 0 0 1 6 6v1"></path>
+            </svg>
+            <span class="topbar-control-label">撤销</span>
+          </button>
+          <button class="history-button" type="button" data-history-redo disabled
+            title="重做 · Cmd/Ctrl+Shift+Z" data-toolbar-tooltip="重做 · Cmd/Ctrl+Shift+Z"
+            aria-keyshortcuts="Meta+Shift+Z Control+Shift+Z Control+Y"
+            data-pill-nav data-pill-variant="neutral" data-pill-size="md" data-pill-kind="action">
+            <svg class="topbar-control-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m16 7 4 4-4 4"></path><path d="M19 11h-8a6 6 0 0 0-6 6v1"></path>
+            </svg>
+            <span class="topbar-control-label">重做</span>
+          </button>
+        </div>
+        <div class="solidify-anchor">
+          <button class="solidify-button" type="button" data-solidify data-unsolidified="false"
+            disabled title="当前没有可固化的修改" data-toolbar-tooltip="当前没有可固化的修改"
+            data-pill-nav data-pill-variant="neutral" data-pill-size="lg" data-pill-kind="action">
+            <span class="solidify-dot" aria-hidden="true"></span>
+            <svg class="topbar-control-icon dsh-only-control-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 4h11l3 3v13H5z"></path><path d="M8 4v5h7V4"></path>
+              <path d="m8.5 15 2 2 4.5-4.5"></path>
+            </svg>
+            <span class="topbar-control-label">固化修改</span>
+          </button>
+          <aside class="solidify-reminder" data-solidify-reminder hidden
+            aria-live="polite" aria-atomic="true" aria-label="固化修改提醒">
+            <span class="solidify-reminder-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M5 4h11l3 3v13H5z"></path><path d="M8 4v5h7V4"></path>
+                <path d="m8.5 15 2 2 4.5-4.5"></path>
+              </svg>
+            </span>
+            <div class="solidify-reminder-copy">
+              <strong>已有 <span data-solidify-reminder-count>11</span> 条修改待固化</strong>
+              <p>建议先固化一次，再继续编辑。</p>
+              <button type="button" data-solidify-reminder-action>查看并固化</button>
+            </div>
+            <button class="solidify-reminder-close" type="button" data-solidify-reminder-close
+              aria-label="关闭固化提醒" title="关闭固化提醒">
+              <svg viewBox="0 0 16 16" aria-hidden="true">
+                <path d="m4 4 8 8M12 4l-8 8"></path>
+              </svg>
+            </button>
+          </aside>
+        </div>
+        <div class="agent-status-anchor">
+          <button class="agent-status" type="button" data-agent-status="offline"
+            aria-haspopup="dialog" aria-expanded="false"
+            title="打开 Agent 终端" data-toolbar-tooltip="打开 Agent 终端"
+            data-pill-nav data-pill-variant="neutral" data-pill-size="lg" data-pill-kind="action">
+            <span class="status-dot" aria-hidden="true"></span>
+            <svg class="topbar-control-icon dsh-only-control-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="5" y="7" width="14" height="11" rx="3"></rect>
+              <path d="M12 4v3M9 12h.01M15 12h.01M9 15h6"></path>
+            </svg>
+            <span class="topbar-control-label" data-agent-label>Codex 未启动</span>
+          </button>
+        </div>
+        <button class="guided-tour-trigger" type="button" data-guided-tour="editing"
+          aria-label="新手引导" title="新手引导" data-toolbar-tooltip="新手引导">
+          <svg class="topbar-control-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M9.7 9a2.45 2.45 0 1 1 3.45 2.24C12.4 11.62 12 12.15 12 13"></path>
+            <path d="M12 17h.01"></path>
+          </svg>
+        </button>
+        <button class="workspace-navigation-button exit-editor-button" type="button"
+          data-exit-editor aria-label="退出编辑器" title="退出编辑器并结束进程"
+          data-toolbar-tooltip="退出编辑器"
+          data-pill-nav data-pill-variant="neutral" data-pill-size="md" data-pill-kind="action">
+          <span class="topbar-control-label">退出编辑器</span>
+          <svg class="topbar-control-icon exit-editor-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M10 4H6.8A1.8 1.8 0 0 0 5 5.8v12.4A1.8 1.8 0 0 0 6.8 20H10"></path>
+            <path d="M10 4v16"></path>
+            <path d="M10 4h4.4A2.6 2.6 0 0 1 17 6.6V8"></path>
+            <path d="M10 20h4.4a2.6 2.6 0 0 0 2.6-2.6V16"></path>
+            <path d="M13 12h8m-3.5-3.5L21 12l-3.5 3.5"></path>
+          </svg>
+        </button>
+        <span data-ws-state="connecting" hidden aria-hidden="true">
+          <span data-ws-label>正在连接</span>
+        </span>
+      </div>
+    </header>
+    <div class="topbar-tooltip" id="topbar-tooltip" role="tooltip"
+      data-topbar-tooltip data-visible="false" hidden></div>
+
+    <section class="deck-binding-banner" data-deck-binding-banner role="alert" hidden>
+      <span class="deck-binding-banner-mark" aria-hidden="true">!</span>
+      <span class="deck-binding-banner-copy">
+        <strong data-deck-binding-title>源文件位置已变化</strong>
+        <small data-deck-binding-detail>编辑内容仍会安全保存在工作副本中。</small>
+      </span>
+      <span class="deck-binding-banner-actions">
+        <button type="button" data-deck-binding-recheck
+          data-pill-nav data-pill-variant="secondary" data-pill-size="sm" data-pill-kind="action">重新检查</button>
+        <button type="button" data-deck-binding-choose
+          data-pill-nav data-pill-variant="primary" data-pill-size="sm" data-pill-kind="action">重新绑定文件</button>
+      </span>
+    </section>
+
+    <section class="workspace" aria-label="Deck 编辑工作台">
+      <aside class="panel page-panel" aria-label="页面列表">
+        <div class="panel-heading">
+          <div class="page-panel-heading-copy">
+            <p class="eyebrow">DECK</p>
+            <h2>页面</h2>
+          </div>
+          <div class="page-panel-heading-actions">
+            <span class="page-count" data-page-count>0 页</span>
+            <button class="page-panel-toggle" type="button" data-page-panel-toggle
+              aria-expanded="false" aria-label="展开页面列表" title="展开页面列表"
+              data-pill-nav data-pill-variant="neutral" data-pill-size="sm" data-pill-kind="icon"
+              data-pill-arrow data-pill-arrow-direction="right">
+              <svg class="pill-nav-arrow-icon" viewBox="0 0 16 16" aria-hidden="true">
+                <polyline points="6 4 10 8 6 12" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round"></polyline>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <nav class="page-list" data-page-list aria-label="幻灯片页面">
+          <div class="loading-state">正在读取页面…</div>
+        </nav>
+      </aside>
+
+      <section class="canvas-column" aria-label="画布">
+        <div class="canvas-toolbar">
+          <div class="canvas-context">
+            <strong data-current-page>尚未载入</strong>
+            <span data-current-key>等待 Deck 响应</span>
+          </div>
+          <div class="mode-tools" role="toolbar" aria-label="编辑模式" data-active-mode="region">
+            <button class="mode-emblem" type="button" data-canvas-present
+              aria-label="全屏播放" title="全屏播放" data-toolbar-tooltip="全屏播放">
+              <span class="mode-emblem-icon"></span>
+            </button>
+            <span class="mode-pill-list">
+              <button class="mode-button" type="button" data-mode="preview" aria-pressed="false"
+                data-pill-nav data-pill-variant="neutral" data-pill-size="md" data-pill-kind="segment">预览</button>
+              <button class="mode-button" type="button" data-mode="edit" aria-pressed="false"
+                data-pill-nav data-pill-variant="neutral" data-pill-size="md" data-pill-kind="segment">编辑</button>
+              <button class="mode-button" type="button" data-mode="region" aria-pressed="true"
+                aria-keyshortcuts="R" title="区域标记（编辑模式下按住 R 临时使用）"
+                data-pill-nav data-pill-variant="neutral" data-pill-size="md" data-pill-kind="segment">区域标记</button>
+            </span>
+          </div>
+          <div class="canvas-tools" aria-label="画布状态">
+            <span class="pptx-export-control" data-pptx-export-control>
+            <button class="canvas-export-button" type="button" data-export-pptx disabled
+              aria-label="导出为 PPTX" title="导出为 PPTX" data-toolbar-tooltip="导出为 PPTX"
+              aria-haspopup="dialog"
+              data-pill-nav data-pill-variant="ghost" data-pill-size="sm" data-pill-kind="icon">
+              <svg class="canvas-export-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 15V3"></path>
+                <path d="m7.5 7.5 4.5-4.5 4.5 4.5"></path>
+                <path d="M7 9H5.8A1.8 1.8 0 0 0 4 10.8v7.4A1.8 1.8 0 0 0 5.8 20h12.4a1.8 1.8 0 0 0 1.8-1.8v-7.4A1.8 1.8 0 0 0 18.2 9H17"></path>
+              </svg>
+            </button>
+            <span class="pptx-export-status" data-pptx-export-status role="status" aria-live="polite" hidden></span>
+            </span>
+            <span class="canvas-resolution">画布 1920 × 1080</span>
+            <span class="zoom-value">缩放 <span data-zoom>—</span></span>
+            <span class="revision-value">会话版本 R<span data-revision>0</span></span>
+          </div>
+        </div>
+        <div class="frame-viewport" data-frame-viewport>
+          <div class="frame-scene" data-frame-scene>
+            <iframe id="deck-frame" title="Deck 预览" referrerpolicy="same-origin"
+              allow="fullscreen *"></iframe>
+          </div>
+        </div>
+      </section>
+
+      <aside class="panel inspector-panel" aria-label="属性面板" hidden>
+        <div class="panel-heading inspector-heading">
+          <div>
+            <p class="eyebrow">INSPECTOR</p>
+            <h2>属性</h2>
+          </div>
+          <div class="inspector-heading-actions">
+            <span class="selection-state" data-selection-state>未选中</span>
+            <button class="inspector-collapse" type="button" data-inspector-collapse
+              aria-label="收起属性面板" title="收起属性面板"
+              data-pill-nav data-pill-variant="neutral" data-pill-size="sm" data-pill-kind="icon"
+              data-pill-arrow data-pill-arrow-direction="right">
+              <svg class="pill-nav-arrow-icon" viewBox="0 0 16 16" aria-hidden="true">
+                <polyline points="6 4 10 8 6 12" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round"></polyline>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="inspector-content" data-inspector-content>
+          <div class="inspector-empty">
+            <div class="selection-frame" aria-hidden="true"></div>
+            <h3>选择文字或画面元素开始编辑</h3>
+            <p>双击文字直接修改；拖动元素移动，拖动右下角控制点缩放；Cmd/Ctrl+Enter 提交，Escape 取消。</p>
+          </div>
+        </div>
+      </aside>
+      <button class="inspector-reopen" type="button" data-inspector-reopen hidden
+        aria-label="展开属性面板" title="展开属性面板"
+        data-pill-nav data-pill-variant="neutral" data-pill-size="sm" data-pill-kind="icon"
+        data-pill-arrow data-pill-arrow-direction="left">
+        <svg class="pill-nav-arrow-icon" viewBox="0 0 16 16" aria-hidden="true">
+          <polyline points="6 4 10 8 6 12" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round"></polyline>
+        </svg>
+      </button>
+      <aside class="agent-terminal-panel" data-agent-terminal-panel role="dialog"
+        aria-label="Agent 交互终端" hidden></aside>
+    </section>
+    <aside class="task-drawer" data-task-drawer aria-label="Agent 修改任务"></aside>
+  </main>
+  <div data-pptx-export-dialog hidden>
+    <div class="ui-modal-backdrop" aria-hidden="true"></div>
+    <section class="solidify-dialog" role="dialog" aria-modal="true"
+      aria-labelledby="pptx-export-title" tabindex="-1">
+      <div class="solidify-dialog-copy">
+        <h2 id="pptx-export-title">导出 PPTX</h2>
+        <p>选择适合后续使用的格式。</p>
+        <p>保存位置默认当前项目目录。切换项目或收起工作台后，导出仍会继续。</p>
+        <fieldset class="pptx-export-options" aria-label="PPTX 导出格式">
+          <label class="pptx-export-option">
+            <input type="radio" name="pptx-export-mode" value="editable" checked>
+            <span><strong>可编辑 PPTX <em>推荐</em></strong><small>文字统一微软雅黑，图形和表格可改，复杂视觉保留图片。</small></span>
+          </label>
+          <label class="pptx-export-option">
+            <input type="radio" name="pptx-export-mode" value="image">
+            <span><strong>高清图片 PPTX</strong><small>优先保持外观，每页为高清图片。</small></span>
+          </label>
+        </fieldset>
+        <p class="pptx-export-limit">两种模式均导出静态页面，动画和网页交互不会转换为可编辑效果。</p>
+      </div>
+      <div class="solidify-dialog-actions">
+        <button type="button" data-pptx-export-cancel data-pill-nav
+          data-pill-variant="secondary" data-pill-size="md" data-pill-kind="action">取消</button>
+        <button type="button" data-pptx-export-confirm data-pill-nav
+          data-pill-variant="primary" data-pill-size="md" data-pill-kind="action">开始导出</button>
+      </div>
+    </section>
+  </div>
+  <div class="solidify-modal" data-solidify-dialog hidden>
+    <div class="ui-modal-backdrop" aria-hidden="true"></div>
+    <section class="solidify-dialog" role="dialog" aria-modal="true"
+      aria-labelledby="solidify-dialog-title" tabindex="-1">
+      <div class="solidify-dialog-mark" data-solidify-mark aria-hidden="true">✓</div>
+      <div class="solidify-dialog-copy">
+        <p class="eyebrow" data-solidify-eyebrow>PERMANENT SAVE</p>
+        <h2 id="solidify-dialog-title" data-solidify-title>固化当前修改？</h2>
+        <p data-solidify-description>这会把当前修改永久写入这个 Deck，并清空全部撤销和重做记录。固化完成后无法恢复到之前的状态。</p>
+        <p class="solidify-dialog-count" data-solidify-count>将固化 0 组修改</p>
+        <section class="solidify-task-summary" data-solidify-task-summary hidden
+          aria-labelledby="solidify-task-summary-title">
+          <header class="solidify-task-summary-header">
+            <strong id="solidify-task-summary-title">未固化修改（按任务）</strong>
+            <span data-solidify-task-count></span>
+          </header>
+          <div class="solidify-task-list" data-solidify-task-list></div>
+        </section>
+        <p class="solidify-other-count" data-solidify-other-count hidden></p>
+        <div class="solidify-progress" data-solidify-progress hidden aria-live="polite">
+          <div class="solidify-progress-copy">
+            <span data-solidify-progress-label>准备固化…</span>
+            <output data-solidify-progress-value></output>
+          </div>
+          <div class="solidify-progress-track" data-solidify-progressbar role="progressbar"
+            aria-label="固化修改进度" aria-valuemin="0" aria-valuemax="100">
+            <span class="solidify-progress-fill" aria-hidden="true"></span>
+          </div>
+        </div>
+      </div>
+      <div class="solidify-dialog-actions">
+        <button class="solidify-cancel" type="button" data-solidify-cancel
+          data-pill-nav data-pill-variant="secondary" data-pill-size="md" data-pill-kind="action">取消</button>
+        <button class="solidify-exit-without" type="button" data-solidify-exit-without hidden
+          data-pill-nav data-pill-variant="secondary" data-pill-size="md" data-pill-kind="action">暂不固化，退出</button>
+        <button class="solidify-confirm" type="button" data-solidify-confirm
+          data-pill-nav data-pill-variant="primary" data-pill-size="md" data-pill-kind="action">永久固化</button>
+      </div>
+    </section>
+  </div>
+  <!-- dev-shell-terminal:start -->
+  <script src="/editor/xterm.js"></script>
+  <!-- dev-shell-terminal:end -->
+  <script type="module" src="/editor/editor.mjs"></script>
+</body>
+</html>

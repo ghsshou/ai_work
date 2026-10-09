@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>页内状态回归夹具</title>
+<style>
+html,body{margin:0;height:100%;overflow:hidden;font-family:sans-serif}
+.navbar{position:fixed;top:0;left:0;z-index:10;background:white;padding:12px}
+.stage{position:absolute;inset:0;overflow-y:auto;width:1920px}
+.slide-canvas{position:relative;width:1920px;height:1080px}
+section{position:absolute;inset:0;padding:100px;box-sizing:border-box;background:#fafafa}
+button{font-size:28px;margin:12px;padding:12px}
+#tocVisual,[data-layer-panel]{margin-top:70px;padding:50px;background:#eee;font-size:48px}
+[data-layer-panel]:not([data-active]){display:none}
+</style></head><body>
+<nav class="navbar"><button class="tab" data-idx="2">模型结构</button><button class="tab" data-idx="3">资源预测</button></nav>
+<div class="stage">
+<div class="slide-canvas"><section data-label="封面"><h1>页内状态回归</h1></section></div>
+<div class="slide-canvas"><section data-label="目录"><h1>目录</h1>
+  <div id="tocList"><button data-mod="0">模型结构</button><button data-mod="1">训推适配</button><button data-mod="2">资源预测</button></div>
+  <div id="tocVisual">CHAPTER 01</div>
+</section></div>
+<div class="slide-canvas"><section data-label="01·模型结构"><h1>模型结构</h1></section></div>
+<div class="slide-canvas"><section data-label="03·资源预测"><h1>资源预测</h1></section></div>
+<div class="slide-canvas"><section data-label="预测主链"><h1>预测主链</h1>
+  <button data-layer-btn="capacity" data-layer-group="prediction" data-active>容量</button>
+  <button data-layer-btn="performance" data-layer-group="prediction">性能</button>
+  <div data-layer-panel="capacity" data-layer-group="prediction" data-active>容量预测</div>
+  <div data-layer-panel="performance" data-layer-group="prediction">性能预测</div>
+</section></div>
+</div>
+<script>
+const nav = [
+  { i:0, code:'01', label:'封面' },
+  { i:1, code:'02', label:'目录' },
+  { i:2, code:'03', label:'01·模型结构' },
+  { i:3, code:'04', label:'03·资源预测' },
+  { i:4, code:'05', label:'预测主链' },
+];
+const chapters = [{ name:'模型结构', start:2 }, { name:'资源预测', start:3 }];
+document.querySelector('.navbar').addEventListener('click', event => {
+  const button = event.target.closest('[data-idx]');
+  if (button) document.querySelectorAll('.slide-canvas')[Number(button.dataset.idx)].scrollIntoView();
+});
+// 保留旧 Deck 的目录重绘协议，验证兼容恢复；新页面仍使用固定 DOM 的 layer。
+document.querySelector('#tocList').addEventListener('click', event => {
+  const button = event.target.closest('[data-mod]');
+  if (button) document.querySelector('#tocVisual').innerHTML = '<strong>CHAPTER 0' + (Number(button.dataset.mod) + 1) + '</strong>';
+});
+document.querySelectorAll('[data-layer-btn]').forEach(button => button.addEventListener('click', () => {
+  document.querySelectorAll('[data-layer-group="prediction"]').forEach(node => {
+    node.toggleAttribute('data-active', (node.dataset.layerBtn ?? node.dataset.layerPanel) === button.dataset.layerBtn);
+  });
+}));
+</script></body></html>

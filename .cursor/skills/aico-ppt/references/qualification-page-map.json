@@ -1,0 +1,154 @@
+{
+  "templateId": "qualification",
+  "pageCount": 22,
+  "pages": [
+    {
+      "page": 1,
+      "pageTypeId": "cover",
+      "referencePage": 1
+    },
+    {
+      "page": 2,
+      "pageTypeId": "toc",
+      "referencePage": 2
+    },
+    {
+      "page": 3,
+      "pageTypeId": "experience-table",
+      "name": "工作经历",
+      "visualFamily": "matrix",
+      "referencePage": 3
+    },
+    {
+      "page": 4,
+      "pageTypeId": "project-portfolio",
+      "name": "主要项目",
+      "visualFamily": "matrix",
+      "referencePage": 4
+    },
+    {
+      "page": 5,
+      "pageTypeId": "evaluation-divider",
+      "name": "专业能力自评",
+      "visualFamily": "transition",
+      "referencePage": 5
+    },
+    {
+      "page": 6,
+      "pageTypeId": "skill-assessment",
+      "name": "专业知识与技能",
+      "visualFamily": "evidence",
+      "referencePage": 6
+    },
+    {
+      "page": 7,
+      "pageTypeId": "knowledge-themes",
+      "name": "专业知识主题",
+      "visualFamily": "sequence",
+      "referencePage": 7
+    },
+    {
+      "page": 8,
+      "pageTypeId": "delivery-model",
+      "name": "职责与协同交付模式",
+      "visualFamily": "diagram",
+      "referencePage": 8
+    },
+    {
+      "page": 9,
+      "pageTypeId": "solution-architecture",
+      "name": "技术方案与架构设计",
+      "visualFamily": "diagram",
+      "referencePage": 9
+    },
+    {
+      "page": 10,
+      "pageTypeId": "technical-leadership",
+      "name": "技术领导力与工程挑战",
+      "visualFamily": "matrix",
+      "referencePage": 10
+    },
+    {
+      "page": 11,
+      "pageTypeId": "issue-reconstruction",
+      "name": "复杂问题处理与工程实现",
+      "visualFamily": "evidence",
+      "referencePage": 11
+    },
+    {
+      "page": 12,
+      "pageTypeId": "issue-root-cause",
+      "name": "问题定位与根因闭环",
+      "visualFamily": "evidence",
+      "referencePage": 12
+    },
+    {
+      "page": 13,
+      "pageTypeId": "performance-evidence",
+      "name": "性能优化与对比证据",
+      "visualFamily": "comparison",
+      "referencePage": 13
+    },
+    {
+      "page": 14,
+      "pageTypeId": "solution-resource-plan",
+      "name": "方案论证与资源规划",
+      "visualFamily": "diagram",
+      "referencePage": 14
+    },
+    {
+      "page": 15,
+      "pageTypeId": "customer-alignment",
+      "name": "客户沟通与跨团队对齐",
+      "visualFamily": "grid",
+      "referencePage": 15
+    },
+    {
+      "page": 16,
+      "pageTypeId": "project-retrospective",
+      "name": "项目复盘与可重复方法",
+      "visualFamily": "comparison",
+      "referencePage": 16
+    },
+    {
+      "page": 17,
+      "pageTypeId": "training-curriculum",
+      "name": "训战体系与能力传递",
+      "visualFamily": "interactive",
+      "referencePage": 17
+    },
+    {
+      "page": 18,
+      "pageTypeId": "professional-giveback",
+      "name": "专业回馈与知识资产",
+      "visualFamily": "matrix",
+      "referencePage": 18
+    },
+    {
+      "page": 19,
+      "pageTypeId": "reflection-divider",
+      "name": "业务思考与能力改进",
+      "visualFamily": "transition",
+      "referencePage": 19
+    },
+    {
+      "page": 20,
+      "pageTypeId": "business-reflection",
+      "name": "业务思考与专业判断",
+      "visualFamily": "matrix",
+      "referencePage": 20
+    },
+    {
+      "page": 21,
+      "pageTypeId": "improvement-plan",
+      "name": "个人能力改进计划",
+      "visualFamily": "sequence",
+      "referencePage": 21
+    },
+    {
+      "page": 22,
+      "pageTypeId": "thanks",
+      "referencePage": 22
+    }
+  ]
+}

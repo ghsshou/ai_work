@@ -1,0 +1,7 @@
+静态 XML 来源：python-pptx 1.0.2 随附的 pptx/templates/default.pptx。
+来源包：python-pptx，项目 https://github.com/scanny/python-pptx。
+原始模板 SHA-256：e10cc9e120961f6bd4074a373c9c80d2a06c497157e8f4972977b7bea83a8f34。
+slideMaster.xml 对应 ppt/slideMasters/slideMaster1.xml，仅保留第 7 个空白版式及对应关系编号。
+slideLayout.xml 对应 ppt/slideLayouts/slideLayout7.xml；theme.xml 对应 ppt/theme/theme1.xml。
+来源为现有 python-pptx 生成并验证过的有效文稿；生产运行不导入 python-pptx。
+归属：Copyright (c) 2013 Steve Canny。MIT 许可证原文见 LICENSE.python-pptx。

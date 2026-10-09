@@ -1,0 +1,378 @@
+{
+  "templateId": "project-review",
+  "pageCount": 54,
+  "pages": [
+    {
+      "page": 1,
+      "pageTypeId": "cover",
+      "referencePage": 1
+    },
+    {
+      "page": 2,
+      "pageTypeId": "toc",
+      "referencePage": 4
+    },
+    {
+      "page": 3,
+      "pageTypeId": "review-entry",
+      "name": "DRB评审要求",
+      "visualFamily": "statement",
+      "referencePage": 2
+    },
+    {
+      "page": 4,
+      "pageTypeId": "decision-inputs",
+      "name": "DRB决策输入件",
+      "visualFamily": "matrix",
+      "referencePage": 3
+    },
+    {
+      "page": 5,
+      "pageTypeId": "project-profile",
+      "name": "项目背景及概况",
+      "visualFamily": "matrix",
+      "referencePage": 5
+    },
+    {
+      "page": 6,
+      "pageTypeId": "customer-value",
+      "name": "客户价值与主张",
+      "visualFamily": "statement",
+      "referencePage": 6
+    },
+    {
+      "page": 7,
+      "pageTypeId": "customer-organization",
+      "name": "客户组织架构与沟通矩阵",
+      "visualFamily": "diagram",
+      "referencePage": 7
+    },
+    {
+      "page": 8,
+      "pageTypeId": "delivery-organization",
+      "name": "交付组织架构与沟通机制",
+      "visualFamily": "diagram",
+      "referencePage": 8
+    },
+    {
+      "page": 9,
+      "pageTypeId": "contract-divider",
+      "name": "章节·标书与合同分析",
+      "visualFamily": "transition",
+      "referencePage": 9
+    },
+    {
+      "page": 10,
+      "pageTypeId": "transaction-flow",
+      "name": "交易模式与合同界面",
+      "visualFamily": "sequence",
+      "referencePage": 10
+    },
+    {
+      "page": 11,
+      "pageTypeId": "project-scenario",
+      "name": "项目场景与系统范围",
+      "visualFamily": "diagram",
+      "referencePage": 11
+    },
+    {
+      "page": 12,
+      "pageTypeId": "service-scope",
+      "name": "项目范围·服务",
+      "visualFamily": "matrix",
+      "referencePage": 12
+    },
+    {
+      "page": 13,
+      "pageTypeId": "equipment-scope",
+      "name": "项目范围·本期设备",
+      "visualFamily": "matrix",
+      "referencePage": 13
+    },
+    {
+      "page": 14,
+      "pageTypeId": "expansion-scope",
+      "name": "项目范围·扩容与分期",
+      "visualFamily": "matrix",
+      "referencePage": 14
+    },
+    {
+      "page": 15,
+      "pageTypeId": "responsibility-matrix",
+      "name": "责任矩阵",
+      "visualFamily": "matrix",
+      "referencePage": 15
+    },
+    {
+      "page": 16,
+      "pageTypeId": "contract-terms",
+      "name": "其他关键条款分析",
+      "visualFamily": "matrix",
+      "referencePage": 16
+    },
+    {
+      "page": 17,
+      "pageTypeId": "solution-divider",
+      "name": "章节·解决方案可交付性评审",
+      "visualFamily": "transition",
+      "referencePage": 17
+    },
+    {
+      "page": 18,
+      "pageTypeId": "solution-architecture",
+      "name": "智算集群整体技术架构",
+      "visualFamily": "diagram",
+      "referencePage": 18
+    },
+    {
+      "page": 19,
+      "pageTypeId": "deliverability-conclusion",
+      "name": "解决方案可交付性评审结论",
+      "visualFamily": "matrix",
+      "referencePage": 19
+    },
+    {
+      "page": 20,
+      "pageTypeId": "network-overview",
+      "name": "项目整体组网拓扑",
+      "visualFamily": "diagram",
+      "referencePage": 20
+    },
+    {
+      "page": 21,
+      "pageTypeId": "business-network",
+      "name": "业务网络设计",
+      "visualFamily": "diagram",
+      "referencePage": 21
+    },
+    {
+      "page": 22,
+      "pageTypeId": "management-network",
+      "name": "管理网络设计",
+      "visualFamily": "diagram",
+      "referencePage": 22
+    },
+    {
+      "page": 23,
+      "pageTypeId": "port-cabling",
+      "name": "端口布线与实施责任",
+      "visualFamily": "diagram",
+      "referencePage": 23
+    },
+    {
+      "page": 24,
+      "pageTypeId": "operations-architecture",
+      "name": "运维方案设计与告警链路",
+      "visualFamily": "diagram",
+      "referencePage": 24
+    },
+    {
+      "page": 25,
+      "pageTypeId": "room-layout",
+      "name": "机房布局设计",
+      "visualFamily": "diagram",
+      "referencePage": 25
+    },
+    {
+      "page": 26,
+      "pageTypeId": "site-survey",
+      "name": "工勘报告与关键环境检查",
+      "visualFamily": "evidence",
+      "referencePage": 26
+    },
+    {
+      "page": 27,
+      "pageTypeId": "security-compliance",
+      "name": "网络安全与合规分析",
+      "visualFamily": "statement",
+      "referencePage": 27
+    },
+    {
+      "page": 28,
+      "pageTypeId": "integration-validation",
+      "name": "集成验证与准入证据",
+      "visualFamily": "evidence",
+      "referencePage": 28
+    },
+    {
+      "page": 29,
+      "pageTypeId": "delivery-divider",
+      "name": "章节·项目交付方案",
+      "visualFamily": "transition",
+      "referencePage": 29
+    },
+    {
+      "page": 30,
+      "pageTypeId": "delivery-strategy",
+      "name": "项目交付策略",
+      "visualFamily": "sequence",
+      "referencePage": 30
+    },
+    {
+      "page": 31,
+      "pageTypeId": "integrated-plan",
+      "name": "分泳道集成实施计划",
+      "visualFamily": "sequence",
+      "referencePage": 31
+    },
+    {
+      "page": 32,
+      "pageTypeId": "resource-plan",
+      "name": "人力资源计划",
+      "visualFamily": "matrix",
+      "referencePage": 32
+    },
+    {
+      "page": 33,
+      "pageTypeId": "procurement-strategy",
+      "name": "采购需求与采购策略",
+      "visualFamily": "evidence",
+      "referencePage": 33
+    },
+    {
+      "page": 34,
+      "pageTypeId": "resale-procurement",
+      "name": "第三方产品转售采购需求",
+      "visualFamily": "matrix",
+      "referencePage": 34
+    },
+    {
+      "page": 35,
+      "pageTypeId": "cooperation-cost",
+      "name": "研发合作及其他服务成本",
+      "visualFamily": "matrix",
+      "referencePage": 35
+    },
+    {
+      "page": 36,
+      "pageTypeId": "supply-chain",
+      "name": "供应链管理计划",
+      "visualFamily": "sequence",
+      "referencePage": 36
+    },
+    {
+      "page": 37,
+      "pageTypeId": "quality-ehs",
+      "name": "质量与EHS管理计划",
+      "visualFamily": "matrix",
+      "referencePage": 37
+    },
+    {
+      "page": 38,
+      "pageTypeId": "cybersecurity-plan",
+      "name": "网络安全管理计划",
+      "visualFamily": "matrix",
+      "referencePage": 38
+    },
+    {
+      "page": 39,
+      "pageTypeId": "acceptance-plan",
+      "name": "验收管理",
+      "visualFamily": "sequence",
+      "referencePage": 39
+    },
+    {
+      "page": 40,
+      "pageTypeId": "revenue-plan",
+      "name": "收入管理",
+      "visualFamily": "matrix",
+      "referencePage": 40
+    },
+    {
+      "page": 41,
+      "pageTypeId": "inventory-plan",
+      "name": "存货管理计划",
+      "visualFamily": "matrix",
+      "referencePage": 41
+    },
+    {
+      "page": 42,
+      "pageTypeId": "partner-divider",
+      "name": "章节·分包与伙伴能力评估",
+      "visualFamily": "transition",
+      "referencePage": 42
+    },
+    {
+      "page": 43,
+      "pageTypeId": "partner-assessment",
+      "name": "伙伴能力与交付边界",
+      "visualFamily": "comparison",
+      "referencePage": 43
+    },
+    {
+      "page": 44,
+      "pageTypeId": "assumption-divider",
+      "name": "章节·项目假设",
+      "visualFamily": "transition",
+      "referencePage": 44
+    },
+    {
+      "page": 45,
+      "pageTypeId": "assumption-register",
+      "name": "项目关键假设",
+      "visualFamily": "matrix",
+      "referencePage": 45
+    },
+    {
+      "page": 46,
+      "pageTypeId": "risk-divider",
+      "name": "章节·项目交付风险",
+      "visualFamily": "transition",
+      "referencePage": 46
+    },
+    {
+      "page": 47,
+      "pageTypeId": "risk-register",
+      "name": "项目交付风险",
+      "visualFamily": "matrix",
+      "referencePage": 47
+    },
+    {
+      "page": 48,
+      "pageTypeId": "operations-divider",
+      "name": "章节·运营运维方案",
+      "visualFamily": "transition",
+      "referencePage": 48
+    },
+    {
+      "page": 49,
+      "pageTypeId": "maintenance-plan",
+      "name": "运维方案",
+      "visualFamily": "sequence",
+      "referencePage": 49
+    },
+    {
+      "page": 50,
+      "pageTypeId": "operations-plan",
+      "name": "运营方案",
+      "visualFamily": "diagram",
+      "referencePage": 50
+    },
+    {
+      "page": 51,
+      "pageTypeId": "cost-divider",
+      "name": "章节·项目服务成本测算",
+      "visualFamily": "transition",
+      "referencePage": 51
+    },
+    {
+      "page": 52,
+      "pageTypeId": "service-cost",
+      "name": "项目服务成本测算",
+      "visualFamily": "evidence",
+      "referencePage": 52
+    },
+    {
+      "page": 53,
+      "pageTypeId": "review-decisions",
+      "name": "DRB待决策事项",
+      "visualFamily": "matrix",
+      "referencePage": null
+    },
+    {
+      "page": 54,
+      "pageTypeId": "thanks",
+      "referencePage": 53
+    }
+  ]
+}

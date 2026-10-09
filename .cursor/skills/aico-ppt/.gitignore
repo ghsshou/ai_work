@@ -1,0 +1,38 @@
+.DS_Store
+__pycache__/
+*.pyc
+*.tmp-applybg
+node_modules/
+/AICO-PPT 编辑器（Windows）.lnk
+/tools/dev-shell/*.lnk
+
+# 本地开发工作区与工具运行态
+.worktrees/
+.superpowers/
+
+# 具体 Deck 项目、编辑器会话与生成交付物
+/Deck-Projects/
+/deck-Project/
+/outputs/
+**/.aico-ppt-editor/
+**/.aico-ppt-editor.archive-*/
+# 旧版 sidecar 仍需原位恢复，不允许误提交。
+**/.huawei-deck-editor/
+**/.huawei-deck-editor.archive-*/
+
+# 工作产物（转换 / 截图输出）
+*.pptx
+!assets/**/*.pptx
+_pre_*.html
+_ckpt_*.html
+# 根目录 html 工作产物（deck 副本 / 个人文件，如毕业设计答辩回顾.html）；assets 下模板不受影响
+/*.html
+shots_*/
+steps_*/
+# 测试产物与本地素材
+.artifacts/
+test-recode/
+/tmp/
+
+# 本机构建产物不提交到源码仓库
+/dist/

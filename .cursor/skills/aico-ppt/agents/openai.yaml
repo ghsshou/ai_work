@@ -1,0 +1,8 @@
+interface:
+  display_name: "AICO-PPT"
+  short_description: "创建、编辑并导出华为红品牌单文件演示文稿"
+  brand_color: "#C7000B"
+  default_prompt: "使用 $aico-ppt 创建或修改一份可离线使用的华为红品牌演示文稿。"
+
+policy:
+  allow_implicit_invocation: true

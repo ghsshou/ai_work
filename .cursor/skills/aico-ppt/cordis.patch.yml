@@ -1,0 +1,7 @@
+# AICO-PPT 的 DSH 安装层。
+# Host 入口把仓库根目录的同一份 SKILL.md 注册到全局 skill 目录；
+# package.json 的 dsh.client 声明让同一行同时加载浏览器 Editor 视图。
+
+- insert:
+    - id: aico-ppt
+      name: aico-ppt-skill
