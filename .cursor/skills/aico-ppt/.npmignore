@@ -1,0 +1,14 @@
+**/__pycache__/
+**/*.pyc
+integrations/dsh/tests/
+scripts/editor/test/
+scripts/editor/prototypes/
+scripts/editor/wsl-*
+scripts/editor/wsl_*
+scripts/editor/agent-terminal-loader.mjs
+scripts/editor/agent-terminal-projection.mjs
+scripts/editor/agent-terminal-runtime.mjs
+scripts/editor/agent-terminal-session.mjs
+scripts/run-editor-tests.mjs
+scripts/test_*.py
+scripts/verify/*.test.mjs

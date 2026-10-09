@@ -1,0 +1,7 @@
+test/
+wsl-*
+wsl_*
+agent-terminal-loader.mjs
+agent-terminal-projection.mjs
+agent-terminal-runtime.mjs
+agent-terminal-session.mjs

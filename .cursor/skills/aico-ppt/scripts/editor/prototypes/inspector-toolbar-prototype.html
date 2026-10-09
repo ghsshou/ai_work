@@ -1,0 +1,817 @@
+<!doctype html>
+<html lang="zh-CN" data-variant="a" data-density="comfortable" data-dock="top">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>Inspector 工具栏原型</title>
+  <style>
+    /*
+      PROTOTYPE — THROWAWAY
+      问题：横向 Inspector 应如何建立“常用操作 → 分类 → 抽屉”的层级？
+      三种布局通过 ?variant=a|b|c 切换。
+      运行：python3 -m http.server 4173 --directory scripts/editor/prototypes
+    */
+    :root {
+      color-scheme: light;
+      --brand: #c7000b;
+      --brand-deep: #9f0009;
+      --ink: #191919;
+      --ink-2: #555960;
+      --ink-3: #888c93;
+      --line: rgb(20 22 28 / 12%);
+      --line-soft: rgb(20 22 28 / 7%);
+      --surface: rgb(255 255 255 / 92%);
+      --surface-soft: rgb(255 255 255 / 62%);
+      --canvas: #eef0f3;
+      --shadow: 0 18px 55px rgb(26 29 34 / 14%), 0 2px 8px rgb(26 29 34 / 7%);
+      --toolbar-shadow: 0 8px 26px rgb(26 29 34 / 8%), inset 0 1px rgb(255 255 255 / 78%);
+      --radius: 12px;
+      --control-h: 34px;
+      --ease: 180ms cubic-bezier(.2,.7,.2,1);
+      font-family: "AICO-PPT UI", "HarmonyOS Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+    body { background: var(--canvas); color: var(--ink); font-size: 13px; }
+    button, input, select { font: inherit; }
+    button { color: inherit; }
+
+    .app {
+      display: grid;
+      grid-template-rows: 50px minmax(0, 1fr);
+      width: 100%;
+      height: 100%;
+    }
+
+    .topbar {
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--line);
+      background: rgb(255 255 255 / 76%);
+      backdrop-filter: blur(18px) saturate(140%);
+    }
+
+    .brand, .top-actions, .mode-switch { display: flex; align-items: center; gap: 8px; }
+    .brand-mark { width: 22px; height: 22px; border-radius: 7px; background: var(--brand); }
+    .brand strong { font-size: 13px; letter-spacing: .01em; }
+    .brand span { color: var(--ink-3); font-size: 11px; }
+
+    .mode-switch {
+      height: 32px;
+      padding: 3px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: rgb(20 22 28 / 4%);
+    }
+    .mode-switch button, .top-action {
+      height: 26px;
+      padding: 0 10px;
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--ink-2);
+      cursor: pointer;
+    }
+    .mode-switch button[aria-pressed="true"] { background: #fff; color: var(--ink); box-shadow: 0 1px 4px rgb(20 22 28 / 10%); }
+    .top-action { border: 1px solid var(--line); background: rgb(255 255 255 / 70%); }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: 64px minmax(560px, 1fr) minmax(340px, 32vw);
+      min-height: 0;
+      gap: 8px;
+      padding: 8px;
+    }
+
+    .page-rail, .stage-column, .terminal {
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      background: rgb(255 255 255 / 56%);
+      box-shadow: 0 5px 20px rgb(24 27 32 / 5%);
+    }
+    .page-rail { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 12px 8px; border-radius: 16px; }
+    .page-label { color: var(--ink-3); font-size: 9px; font-weight: 750; letter-spacing: .14em; writing-mode: vertical-rl; }
+    .page-thumb {
+      display: grid;
+      width: 42px;
+      height: 28px;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink-3);
+      font-size: 10px;
+      cursor: pointer;
+    }
+    .page-thumb[aria-current="page"] { border-color: rgb(199 0 11 / 38%); box-shadow: 0 0 0 2px rgb(199 0 11 / 9%); color: var(--brand); }
+
+    .stage-column { position: relative; display: grid; grid-template-rows: auto minmax(0, 1fr); border-radius: 16px; }
+    .toolbar-region { position: relative; z-index: 10; padding: 10px; border-bottom: 1px solid var(--line-soft); }
+    .context-toolbar {
+      position: relative;
+      display: flex;
+      min-height: 56px;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border: 1px solid rgb(20 22 28 / 10%);
+      border-radius: 13px;
+      background: var(--surface);
+      box-shadow: var(--toolbar-shadow);
+    }
+
+    .selection-chip {
+      display: grid;
+      min-width: 174px;
+      max-width: 214px;
+      grid-template-columns: 34px minmax(0, 1fr);
+      align-items: center;
+      gap: 9px;
+      padding-right: 10px;
+    }
+    .selection-icon { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 9px; background: rgb(199 0 11 / 8%); color: var(--brand); font: 750 16px/1 Georgia,serif; }
+    .selection-copy { min-width: 0; }
+    .selection-copy strong, .selection-copy span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .selection-copy strong { font-size: 12px; line-height: 17px; }
+    .selection-copy span { color: var(--ink-3); font-size: 10px; line-height: 15px; }
+
+    .divider { width: 1px; height: 28px; flex: 0 0 1px; background: var(--line-soft); }
+    .quick-group, .category-group, .format-set { display: flex; min-width: 0; align-items: center; gap: 5px; }
+    .quick-group { flex: 1 1 auto; }
+    .format-set { flex: 0 0 auto; }
+    .category-group { flex: 0 0 auto; }
+
+    .field-shell {
+      display: flex;
+      height: var(--control-h);
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      transition: border-color var(--ease), box-shadow var(--ease), background var(--ease);
+    }
+    .field-shell:focus-within { border-color: rgb(199 0 11 / 48%); box-shadow: 0 0 0 3px rgb(199 0 11 / 8%); }
+    .field-shell select, .field-shell input { height: 100%; border: 0; outline: 0; background: transparent; color: var(--ink-2); }
+    .font-family { width: clamp(118px, 14vw, 172px); padding: 0 9px; }
+    .font-size { width: 52px; padding: 0 8px; appearance: textfield; }
+    .unit { padding-right: 8px; color: var(--ink-3); font-size: 10px; }
+
+    .icon-button, .drawer-trigger, .reset-button {
+      display: inline-flex;
+      height: var(--control-h);
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--ink-2);
+      cursor: pointer;
+      transition: color var(--ease), background var(--ease), border-color var(--ease), transform 100ms ease;
+    }
+    .icon-button { width: 34px; padding: 0; font-family: Georgia,serif; font-size: 16px; font-weight: 700; }
+    .icon-button:hover, .drawer-trigger:hover, .reset-button:hover { background: rgb(20 22 28 / 5%); color: var(--ink); }
+    .icon-button:active, .drawer-trigger:active { transform: translateY(1px); }
+    .icon-button:focus-visible, .drawer-trigger:focus-visible, .reset-button:focus-visible, .swatch:focus-visible, .choice:focus-visible { outline: 2px solid rgb(199 0 11 / 42%); outline-offset: 2px; }
+    .icon-button[aria-pressed="true"] { border-color: rgb(199 0 11 / 18%); background: rgb(199 0 11 / 9%); color: var(--brand-deep); }
+    .drawer-trigger { min-width: 78px; padding: 0 10px; font-weight: 650; }
+    .drawer-trigger svg { width: 15px; height: 15px; stroke-width: 1.8; }
+    .drawer-trigger .chevron { width: 11px; transition: transform var(--ease); }
+    .drawer-trigger[aria-expanded="true"] { border-color: rgb(199 0 11 / 17%); background: rgb(199 0 11 / 8%); color: var(--brand-deep); }
+    .drawer-trigger[aria-expanded="true"] .chevron { transform: rotate(180deg); }
+    .text-drawer-trigger { display: none; }
+
+    .drawers { position: absolute; top: calc(100% + 7px); right: 10px; left: 10px; pointer-events: none; }
+    .drawer {
+      display: none;
+      width: min(342px, 100%);
+      margin-left: auto;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgb(255 255 255 / 98%);
+      box-shadow: var(--shadow);
+      pointer-events: auto;
+      transform-origin: top right;
+      animation: drawer-in var(--ease) both;
+    }
+    .drawer[data-open="true"] { display: block; }
+    @keyframes drawer-in { from { opacity: 0; transform: translateY(-5px) scale(.985); } to { opacity: 1; transform: none; } }
+    .drawer-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 13px; }
+    .drawer-head strong { font-size: 13px; }
+    .drawer-head span { color: var(--ink-3); font-size: 10px; }
+    .drawer-section + .drawer-section { margin-top: 14px; padding-top: 13px; border-top: 1px solid var(--line-soft); }
+    .drawer-label { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; color: var(--ink-2); font-size: 11px; font-weight: 650; }
+    .choice-row, .swatch-grid { display: grid; gap: 6px; }
+    .choice-row { grid-template-columns: repeat(4, 1fr); }
+    .choice {
+      min-height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--ink-2);
+      cursor: pointer;
+    }
+    .choice:hover { border-color: rgb(20 22 28 / 22%); color: var(--ink); }
+    .choice[aria-pressed="true"] { border-color: rgb(199 0 11 / 27%); background: rgb(199 0 11 / 8%); color: var(--brand-deep); box-shadow: inset 0 0 0 1px rgb(199 0 11 / 5%); }
+    .swatch-grid { grid-template-columns: repeat(8, 1fr); }
+    .swatch { aspect-ratio: 1; border: 1px solid rgb(20 22 28 / 14%); border-radius: 7px; background: var(--swatch); cursor: pointer; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 36%); transition: transform 120ms ease, box-shadow 120ms ease; }
+    .swatch:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgb(20 22 28 / 15%); }
+    .swatch[aria-pressed="true"] { outline: 2px solid var(--brand); outline-offset: 2px; }
+    .range-row { display: grid; grid-template-columns: 18px minmax(0, 1fr) 38px; align-items: center; gap: 8px; }
+    .range-row output { color: var(--ink-2); font-variant-numeric: tabular-nums; text-align: right; }
+    input[type="range"] { width: 100%; accent-color: var(--brand); }
+    .toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .switch { position: relative; width: 38px; height: 22px; flex: 0 0 auto; border: 0; border-radius: 999px; background: #d5d7dc; cursor: pointer; transition: background var(--ease); }
+    .switch::after { position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgb(20 22 28 / 22%); content: ""; transition: transform var(--ease); }
+    .switch[aria-pressed="true"] { background: var(--brand); }
+    .switch[aria-pressed="true"]::after { transform: translateX(16px); }
+    .inline-fields { display: grid; grid-template-columns: 1fr 90px; gap: 8px; margin-top: 10px; }
+    .inline-fields select, .inline-fields input { width: 100%; height: 34px; padding: 0 9px; border: 1px solid var(--line); border-radius: 8px; outline: 0; background: #fff; }
+    .reset-button { width: 100%; margin-top: 14px; border-color: var(--line); background: rgb(20 22 28 / 3%); font-size: 11px; }
+
+    .canvas { position: relative; display: grid; min-height: 0; place-items: center; overflow: hidden; background: radial-gradient(circle at 50% 32%, #fff 0, #f0f2f5 50%, #e3e6eb 100%); }
+    .slide {
+      position: relative;
+      width: min(82%, 900px);
+      aspect-ratio: 16/9;
+      overflow: hidden;
+      border: 1px solid rgb(20 22 28 / 9%);
+      background: #fff;
+      box-shadow: 0 24px 64px rgb(28 31 36 / 16%);
+    }
+    .slide::before { position: absolute; top: 0; bottom: 0; left: 0; width: 7px; background: var(--brand); content: ""; }
+    .slide-inner { padding: 7% 8%; }
+    .slide-kicker { margin-bottom: 12px; color: var(--brand); font-size: clamp(9px, .8vw, 13px); font-weight: 750; letter-spacing: .16em; }
+    .sample-text {
+      position: relative;
+      margin: 0;
+      color: #191919;
+      font-family: "Huawei Sans", "HarmonyOS Sans SC", sans-serif;
+      font-size: clamp(25px, 3.1vw, 54px);
+      font-weight: 700;
+      line-height: 1.2;
+      text-align: left;
+      outline: 2px solid var(--brand);
+      outline-offset: 9px;
+      opacity: 1;
+    }
+    .sample-text::after { position: absolute; right: -15px; bottom: -15px; width: 7px; height: 7px; border: 2px solid #fff; background: var(--brand); box-shadow: 0 0 0 1px var(--brand); content: ""; }
+    .sample-subtitle { width: 72%; margin: 30px 0 0; color: #656a72; font-size: clamp(11px, 1vw, 17px); line-height: 1.65; }
+    .mini-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 6%; }
+    .mini-card { min-height: 70px; padding: 14px; border: 1px solid #e1e3e7; border-radius: 10px; background: #fafafa; }
+    .mini-card span { display: block; width: 32%; height: 5px; margin-bottom: 10px; border-radius: 3px; background: rgb(199 0 11 / 62%); }
+    .mini-card::after { display: block; width: 80%; height: 4px; border-radius: 3px; background: #d9dce1; box-shadow: 0 10px #e5e7ea; content: ""; }
+    .zoom-pill { position: absolute; right: 18px; bottom: 14px; padding: 5px 8px; border-radius: 7px; background: rgb(255 255 255 / 80%); color: var(--ink-3); font-size: 10px; box-shadow: 0 2px 8px rgb(20 22 28 / 9%); }
+
+    .terminal { display: grid; grid-template-rows: 44px minmax(0,1fr) 48px; border-radius: 16px; background: #16181c; color: #d8dce4; }
+    .terminal-head { display: flex; align-items: center; justify-content: space-between; padding: 0 14px; border-bottom: 1px solid rgb(255 255 255 / 8%); }
+    .terminal-head strong { font-size: 12px; }
+    .online { display: flex; align-items: center; gap: 6px; color: #aeb4bf; font-size: 10px; }
+    .online::before { width: 7px; height: 7px; border-radius: 50%; background: #27b36a; content: ""; box-shadow: 0 0 0 4px rgb(39 179 106 / 10%); }
+    .terminal-body { padding: 16px; overflow: hidden; color: #9da4af; font: 11px/1.7 ui-monospace,SFMono-Regular,Menlo,monospace; }
+    .terminal-body b { color: #f1f3f5; font-weight: 600; }
+    .terminal-prompt { align-self: center; margin: 0 12px 12px; padding: 10px; border: 1px solid rgb(255 255 255 / 10%); border-radius: 9px; background: rgb(255 255 255 / 5%); color: #737b88; font-size: 11px; }
+
+    .side-inspector {
+      position: relative;
+      display: none;
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgb(255 255 255 / 76%);
+      box-shadow: 0 5px 20px rgb(24 27 32 / 7%);
+      backdrop-filter: blur(18px) saturate(135%);
+    }
+    .side-head { display: flex; height: 56px; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid var(--line-soft); }
+    .side-head-copy span, .side-head-copy strong { display: block; }
+    .side-head-copy span { color: var(--ink-3); font-size: 9px; font-weight: 750; letter-spacing: .14em; }
+    .side-head-copy strong { margin-top: 2px; font-size: 13px; }
+    .side-close { display: grid; width: 30px; height: 30px; place-items: center; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--ink-2); cursor: pointer; }
+    .side-object { display: grid; grid-template-columns: 38px minmax(0,1fr); align-items: center; gap: 10px; margin: 12px; padding: 11px; border: 1px solid var(--line-soft); border-radius: 11px; background: rgb(255 255 255 / 72%); }
+    .side-object .selection-icon { width: 38px; height: 38px; }
+    .side-accordion { min-height: 0; padding: 0 12px 12px; overflow: auto; scrollbar-width: thin; }
+    .side-group { border-top: 1px solid var(--line-soft); }
+    .side-group:first-child { border-top: 0; }
+    .side-group-trigger { display: flex; width: 100%; height: 44px; align-items: center; justify-content: space-between; padding: 0 4px; border: 0; background: transparent; color: var(--ink-2); cursor: pointer; }
+    .side-group-trigger span:first-child { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; }
+    .side-group-trigger small { margin-left: auto; margin-right: 9px; color: var(--ink-3); font-size: 9px; font-weight: 500; }
+    .side-group-trigger svg { width: 12px; transition: transform var(--ease); }
+    .side-group[data-open="true"] .side-group-trigger { color: var(--brand-deep); }
+    .side-group[data-open="true"] .side-group-trigger svg { transform: rotate(180deg); }
+    .side-group-panel { display: none; padding: 2px 4px 15px; }
+    .side-group[data-open="true"] .side-group-panel { display: block; animation: drawer-in var(--ease) both; }
+    .side-field + .side-field { margin-top: 12px; }
+    .side-field > label, .side-field-label { display: block; margin-bottom: 6px; color: var(--ink-2); font-size: 10px; font-weight: 650; }
+    .side-field-grid { display: grid; grid-template-columns: minmax(0,1fr) 72px; gap: 7px; }
+    .side-field-grid select, .side-field-grid input { width: 100%; height: 34px; min-width: 0; padding: 0 9px; border: 1px solid var(--line); border-radius: 8px; outline: 0; background: #fff; color: var(--ink-2); }
+    .side-format-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .side-format-row .icon-button { width: auto; border-color: var(--line); background: #fff; }
+    .side-inspector .swatch-grid { grid-template-columns: repeat(6, 1fr); }
+    .side-inspector .choice-row { grid-template-columns: repeat(3, 1fr); }
+    .side-inspector .choice-row[data-four] { grid-template-columns: repeat(4, 1fr); }
+    .side-inspector .drawer-section + .drawer-section { margin-top: 12px; padding-top: 12px; }
+    .side-footer { display: flex; align-items: center; padding: 11px 12px; border-top: 1px solid var(--line-soft); }
+    .side-footer .reset-button { margin: 0; }
+    .side-empty { display: none; place-items: center; align-content: center; gap: 10px; padding: 24px; color: var(--ink-3); text-align: center; }
+    .side-empty p { max-width: 210px; margin: 0; font-size: 11px; line-height: 1.65; }
+
+    html[data-dock="right"] .workspace { grid-template-columns: 64px minmax(560px,1fr) 296px; }
+    html[data-dock="right"] .terminal { display: none; }
+    html[data-dock="right"] .side-inspector { display: grid; grid-template-rows: 56px auto minmax(0,1fr) 56px; }
+    html[data-dock="right"] .stage-column { grid-template-rows: minmax(0,1fr); }
+    html[data-dock="right"] .toolbar-region { display: none; }
+    body[data-sim="busy"] .side-inspector::after { position: absolute; z-index: 4; inset: 0; display: grid; place-items: center; border-radius: inherit; background: rgb(255 255 255 / 78%); color: var(--ink-2); content: "正在应用样式…"; backdrop-filter: blur(2px); }
+    body[data-sim="empty"] .side-inspector { grid-template-rows: 56px minmax(0,1fr); }
+    body[data-sim="empty"] .side-object, body[data-sim="empty"] .side-accordion, body[data-sim="empty"] .side-footer { display: none; }
+    body[data-sim="empty"] .side-empty { display: grid; }
+
+    .prototype-switcher {
+      position: fixed;
+      z-index: 100;
+      bottom: 16px;
+      left: 50%;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 5px;
+      border: 1px solid rgb(255 255 255 / 13%);
+      border-radius: 12px;
+      background: rgb(20 22 28 / 92%);
+      color: #fff;
+      box-shadow: 0 14px 40px rgb(20 22 28 / 25%);
+      transform: translateX(-50%);
+      backdrop-filter: blur(14px);
+    }
+    .prototype-switcher button { height: 32px; border: 0; border-radius: 8px; background: transparent; color: #bfc3ca; cursor: pointer; }
+    .prototype-switcher button:hover { background: rgb(255 255 255 / 9%); color: #fff; }
+    .prototype-switcher .arrow { width: 32px; }
+    .variant-name { min-width: 190px; padding: 0 12px; text-align: center; font-size: 11px; }
+    .variant-name b { margin-right: 6px; color: #fff; }
+
+    .tweaks-toggle { position: fixed; z-index: 101; right: 16px; bottom: 16px; height: 42px; padding: 0 14px; border: 1px solid rgb(255 255 255 / 13%); border-radius: 11px; background: rgb(20 22 28 / 92%); color: #fff; box-shadow: 0 14px 40px rgb(20 22 28 / 22%); cursor: pointer; }
+    .tweaks {
+      position: fixed;
+      z-index: 100;
+      right: 16px;
+      bottom: 66px;
+      width: 248px;
+      padding: 14px;
+      border: 1px solid rgb(255 255 255 / 12%);
+      border-radius: 12px;
+      background: rgb(20 22 28 / 94%);
+      color: #fff;
+      box-shadow: 0 20px 58px rgb(20 22 28 / 28%);
+      backdrop-filter: blur(16px);
+    }
+    .tweaks[hidden] { display: none; }
+    .tweaks strong { display: block; margin-bottom: 12px; }
+    .tweak-row { display: grid; grid-template-columns: 76px 1fr; align-items: center; gap: 8px; margin-top: 9px; color: #adb3bd; font-size: 11px; }
+    .tweak-row select { width: 100%; height: 31px; padding: 0 7px; border: 1px solid rgb(255 255 255 / 12%); border-radius: 7px; background: #292c32; color: #fff; }
+
+    .status-toast { position: absolute; z-index: 30; top: 12px; left: 50%; display: none; padding: 8px 12px; border: 1px solid rgb(199 0 11 / 20%); border-radius: 9px; background: #fff5f5; color: var(--brand-deep); box-shadow: 0 8px 22px rgb(20 22 28 / 12%); transform: translateX(-50%); font-size: 11px; }
+    body[data-sim="error"] .status-toast { display: block; }
+    body[data-sim="busy"] .context-toolbar::after { position: absolute; inset: 0; display: grid; place-items: center; border-radius: inherit; background: rgb(255 255 255 / 78%); color: var(--ink-2); content: "正在应用样式…"; backdrop-filter: blur(2px); }
+    body[data-sim="empty"] .context-toolbar > :not(.empty-toolbar) { display: none !important; }
+    .empty-toolbar { display: none; width: 100%; align-items: center; justify-content: center; gap: 9px; color: var(--ink-3); }
+    body[data-sim="empty"] .empty-toolbar { display: flex; }
+
+    /* B：把分类提升为主导航，抽屉成为工具栏第二层。 */
+    html[data-variant="b"] .context-toolbar { display: grid; grid-template-columns: 190px minmax(0,1fr); grid-template-rows: 38px auto; align-items: center; gap: 6px 12px; }
+    html[data-variant="b"] .selection-chip { grid-row: 1 / 3; align-self: stretch; padding: 10px 12px 10px 2px; border-right: 1px solid var(--line-soft); }
+    html[data-variant="b"] .quick-group { grid-column: 2; justify-content: space-between; }
+    html[data-variant="b"] .quick-group > .field-shell { display: none; }
+    html[data-variant="b"] .quick-group > .divider { display: none; }
+    html[data-variant="b"] .category-group { grid-column: 2; justify-content: flex-start; }
+    html[data-variant="b"] .text-drawer-trigger { display: inline-flex; }
+    html[data-variant="b"] .drawers { position: static; grid-column: 1 / -1; }
+    html[data-variant="b"] .drawer { width: 100%; margin: 4px 0 0; box-shadow: inset 0 1px var(--line-soft); border: 0; border-radius: 0 0 10px 10px; background: rgb(248 249 251 / 96%); }
+    html[data-variant="b"] .drawer-head { display: none; }
+
+    /* C：默认只呈现分类命令，适合更窄的工作区。 */
+    html[data-variant="c"] .context-toolbar { min-height: 50px; justify-content: space-between; padding: 7px 8px; }
+    html[data-variant="c"] .selection-chip { min-width: 44px; max-width: 44px; padding: 0; }
+    html[data-variant="c"] .selection-copy, html[data-variant="c"] .quick-group, html[data-variant="c"] .context-toolbar > .divider { display: none; }
+    html[data-variant="c"] .category-group { width: 100%; justify-content: flex-start; }
+    html[data-variant="c"] .text-drawer-trigger { display: inline-flex; }
+    html[data-variant="c"] .drawer-trigger { min-width: 92px; }
+    html[data-variant="c"] .drawers { right: auto; width: min(390px, calc(100vw - 440px)); }
+    html[data-variant="c"] .drawer { width: 100%; margin: 0; }
+
+    html[data-density="compact"] { --control-h: 30px; }
+    html[data-density="compact"] .context-toolbar { min-height: 48px; padding-top: 6px; padding-bottom: 6px; }
+    html[data-density="compact"] .selection-icon { width: 30px; height: 30px; }
+
+    @media (max-width: 1120px) {
+      .workspace { grid-template-columns: 54px minmax(520px, 1fr) 310px; }
+      .selection-chip { min-width: 44px; max-width: 44px; padding: 0; }
+      .selection-copy { display: none; }
+      .drawer-trigger span { display: none; }
+      .drawer-trigger { min-width: 36px; width: 36px; padding: 0; }
+      .drawer-trigger .chevron { display: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body data-sim="normal">
+  <div class="app">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark" aria-hidden="true"></span><strong>AICO-PPT Editor</strong><span>工具栏原型</span></div>
+      <div class="mode-switch" aria-label="编辑模式"><button aria-pressed="true">编辑</button><button aria-pressed="false">标记</button><button aria-pressed="false">预览</button></div>
+      <div class="top-actions"><button class="top-action">撤销</button><button class="top-action">重做</button><button class="top-action">固化修改</button></div>
+    </header>
+
+    <main class="workspace">
+      <aside class="page-rail" aria-label="页面"><span class="page-label">PAGES</span><button class="page-thumb" aria-current="page">01</button><button class="page-thumb">02</button><button class="page-thumb">03</button><button class="page-thumb">04</button></aside>
+
+      <section class="stage-column">
+        <div class="toolbar-region">
+          <div class="context-toolbar" aria-label="文字属性工具栏">
+            <div class="empty-toolbar"><span class="selection-icon">T</span><span>选择文字或画面元素开始编辑</span></div>
+
+            <div class="selection-chip">
+              <span class="selection-icon">T</span>
+              <span class="selection-copy"><strong>DeepSeekRL × Ascend A3</strong><span>第 1 页 · 标题文字</span></span>
+            </div>
+            <span class="divider" aria-hidden="true"></span>
+
+            <div class="quick-group">
+              <label class="field-shell"><select class="font-family" aria-label="字体"><option>Huawei Sans</option><option>HarmonyOS Sans SC</option><option>Noto Sans SC</option><option>JetBrains Mono</option></select></label>
+              <label class="field-shell"><input class="font-size" type="number" value="54" min="6" max="240" aria-label="字号"><span class="unit">px</span></label>
+              <span class="divider" aria-hidden="true"></span>
+              <span class="format-set">
+                <button class="icon-button" data-format="bold" aria-label="加粗" aria-pressed="true" title="加粗  ⌘B">B</button>
+                <button class="icon-button" data-format="italic" aria-label="斜体" aria-pressed="false" title="斜体  ⌘I"><i>I</i></button>
+                <button class="icon-button" data-format="underline" aria-label="下划线" aria-pressed="false" title="下划线  ⌘U"><u>U</u></button>
+              </span>
+            </div>
+
+            <span class="divider" aria-hidden="true"></span>
+            <div class="category-group">
+              <button class="drawer-trigger text-drawer-trigger" data-drawer-trigger="text" aria-expanded="false" aria-controls="drawer-text">
+                <span>文字</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 5h14M12 5v14M8 19h8"/></svg><svg class="chevron" viewBox="0 0 12 8" fill="none" stroke="currentColor"><path d="m2 2 4 4 4-4"/></svg>
+              </button>
+              <button class="drawer-trigger" data-drawer-trigger="paragraph" aria-expanded="false" aria-controls="drawer-paragraph">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 6h16M4 11h11M4 16h16M4 21h9"/></svg><span>段落</span><svg class="chevron" viewBox="0 0 12 8" fill="none" stroke="currentColor"><path d="m2 2 4 4 4-4"/></svg>
+              </button>
+              <button class="drawer-trigger" data-drawer-trigger="appearance" aria-expanded="false" aria-controls="drawer-appearance">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3s6 6.2 6 11a6 6 0 0 1-12 0c0-4.8 6-11 6-11Z"/></svg><span>外观</span><svg class="chevron" viewBox="0 0 12 8" fill="none" stroke="currentColor"><path d="m2 2 4 4 4-4"/></svg>
+              </button>
+              <button class="drawer-trigger" data-drawer-trigger="more" aria-expanded="false" aria-controls="drawer-more">
+                <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg><span>更多</span><svg class="chevron" viewBox="0 0 12 8" fill="none" stroke="currentColor"><path d="m2 2 4 4 4-4"/></svg>
+              </button>
+            </div>
+
+            <div class="drawers">
+              <section class="drawer" id="drawer-text" data-drawer="text" data-open="false" aria-label="文字设置">
+                <div class="drawer-head"><strong>文字</strong><span>字体与字形</span></div>
+                <div class="drawer-section"><div class="drawer-label">字体与字号</div><div class="inline-fields"><select class="drawer-font"><option>Huawei Sans</option><option>HarmonyOS Sans SC</option><option>Noto Sans SC</option></select><input class="drawer-size" type="number" value="54" min="6" max="240"></div></div>
+                <div class="drawer-section"><div class="drawer-label">字形</div><div class="choice-row"><button class="choice mirror-format" data-format="bold" aria-pressed="true">B</button><button class="choice mirror-format" data-format="italic" aria-pressed="false"><i>I</i></button><button class="choice mirror-format" data-format="underline" aria-pressed="false"><u>U</u></button><button class="choice" aria-pressed="false">Aa</button></div></div>
+              </section>
+
+              <section class="drawer" id="drawer-paragraph" data-drawer="paragraph" data-open="false" aria-label="段落设置">
+                <div class="drawer-head"><strong>段落</strong><span>结构与阅读节奏</span></div>
+                <div class="drawer-section"><div class="drawer-label">对齐</div><div class="choice-row"><button class="choice align-choice" data-align="left" aria-pressed="true">左</button><button class="choice align-choice" data-align="center" aria-pressed="false">中</button><button class="choice align-choice" data-align="right" aria-pressed="false">右</button><button class="choice align-choice" data-align="justify" aria-pressed="false">齐</button></div></div>
+                <div class="drawer-section"><div class="drawer-label">列表</div><div class="choice-row"><button class="choice" data-list="bullet" aria-pressed="false">• 列表</button><button class="choice" data-list="number" aria-pressed="false">1. 列表</button><button class="choice" aria-pressed="false">减少</button><button class="choice" aria-pressed="false">增加</button></div></div>
+                <div class="drawer-section"><div class="drawer-label"><span>行距</span><span>保持抽屉打开以连续调整</span></div><div class="range-row"><span>↕</span><input class="line-height" type="range" min="80" max="220" value="120"><output>1.20</output></div></div>
+              </section>
+
+              <section class="drawer" id="drawer-appearance" data-drawer="appearance" data-open="false" aria-label="外观设置">
+                <div class="drawer-head"><strong>外观</strong><span>文字色与填充</span></div>
+                <div class="drawer-section"><div class="drawer-label">文字颜色</div><div class="swatch-grid" data-swatch-group="text"></div></div>
+                <div class="drawer-section"><div class="drawer-label">填充颜色</div><div class="swatch-grid" data-swatch-group="fill"></div></div>
+              </section>
+
+              <section class="drawer" id="drawer-more" data-drawer="more" data-open="false" aria-label="更多设置">
+                <div class="drawer-head"><strong>更多</strong><span>低频与高级设置</span></div>
+                <div class="drawer-section"><div class="toggle-row"><div><div class="drawer-label">显示边框</div><span style="color:var(--ink-3);font-size:10px">继承当前对象的原始边框</span></div><button class="switch" data-border-switch aria-label="显示边框" aria-pressed="false"></button></div><div class="inline-fields"><select aria-label="边框样式"><option>实线</option><option>虚线</option><option>点线</option></select><input type="number" min="0" max="40" value="1" aria-label="边框宽度"></div></div>
+                <div class="drawer-section"><div class="drawer-label"><span>不透明度</span><span>作用于整个对象</span></div><div class="range-row"><span>◐</span><input class="opacity" type="range" min="0" max="100" value="100"><output>100%</output></div></div>
+                <button class="reset-button" data-reset>恢复全部原始样式</button>
+              </section>
+            </div>
+          </div>
+        </div>
+
+        <div class="canvas">
+          <div class="status-toast">样式应用失败，可重试或撤销</div>
+          <article class="slide">
+            <div class="slide-inner">
+              <div class="slide-kicker">DEMO · TEXT TOOLBAR</div>
+              <h1 class="sample-text" contenteditable="true" spellcheck="false">DeepSeekRL × Ascend A3</h1>
+              <p class="sample-subtitle">选中文字后，工具栏只保留高频动作；段落、外观和高级属性通过锚定抽屉逐层展开。</p>
+              <div class="mini-cards"><div class="mini-card"><span></span></div><div class="mini-card"><span></span></div><div class="mini-card"><span></span></div></div>
+            </div>
+          </article>
+          <span class="zoom-pill">76%</span>
+        </div>
+      </section>
+
+      <aside class="side-inspector" aria-label="右侧属性面板">
+        <header class="side-head">
+          <div class="side-head-copy"><span>INSPECTOR</span><strong>属性</strong></div>
+          <button class="side-close" type="button" title="收起属性面板" aria-label="收起属性面板">→</button>
+        </header>
+
+        <div class="side-object">
+          <span class="selection-icon">T</span>
+          <span class="selection-copy"><strong>DeepSeekRL × Ascend A3</strong><span>第 1 页 · 标题文字</span></span>
+        </div>
+        <div class="side-empty"><span class="selection-icon">T</span><strong>尚未选择对象</strong><p>在画布中选择文字或元素后，这里会显示对应的属性分类。</p></div>
+
+        <div class="side-accordion">
+          <section class="side-group" data-side-group="text" data-open="true">
+            <button class="side-group-trigger" type="button" aria-expanded="true"><span>文字</span><small>字体 · 字形 · 颜色</small><svg viewBox="0 0 12 8" fill="none" stroke="currentColor"><path d="m2 2 4 4 4-4"/></svg></button>
+            <div class="side-group-panel">
+              <div class="side-field"><label>字体与字号</label><div class="side-field-grid"><select class="side-font" aria-label="侧栏字体"><option>Huawei Sans</option><option>HarmonyOS Sans SC</option><option>Noto Sans SC</option><option>JetBrains Mono</option></select><input class="side-size" type="number" value="54" min="6" max="240" aria-label="侧栏字号"></div></div>
+              <div class="side-field"><span class="side-field-label">字形</span><div class="side-format-row"><button class="icon-button" data-format="bold" aria-pressed="true">B</button><button class="icon-button" data-format="italic" aria-pressed="false"><i>I</i></button><button class="icon-button" data-format="underline" aria-pressed="false"><u>U</u></button></div></div>
+              <div class="side-field"><span class="side-field-label">文字颜色</span><div class="swatch-grid" data-swatch-group="text"></div></div>
+            </div>
+          </section>
+
+          <section class="side-group" data-side-group="paragraph" data-open="false">
+            <button class="side-group-trigger" type="button" aria-expanded="false"><span>段落</span><small>对齐 · 列表 · 行距</small><svg viewBox="0 0 12 8" fill="none" stroke="currentColor"><path d="m2 2 4 4 4-4"/></svg></button>
+            <div class="side-group-panel">
+              <div class="side-field"><span class="side-field-label">对齐</span><div class="choice-row" data-four><button class="choice align-choice" data-align="left" aria-pressed="true">左</button><button class="choice align-choice" data-align="center" aria-pressed="false">中</button><button class="choice align-choice" data-align="right" aria-pressed="false">右</button><button class="choice align-choice" data-align="justify" aria-pressed="false">齐</button></div></div>
+              <div class="side-field"><span class="side-field-label">列表</span><div class="choice-row"><button class="choice" data-list="bullet" aria-pressed="false">• 项目</button><button class="choice" data-list="number" aria-pressed="false">1. 编号</button><button class="choice" aria-pressed="false">缩进</button></div></div>
+              <div class="side-field"><span class="side-field-label">行距</span><div class="range-row"><span>↕</span><input class="line-height" type="range" min="80" max="220" value="120"><output>1.20</output></div></div>
+            </div>
+          </section>
+
+          <section class="side-group" data-side-group="appearance" data-open="false">
+            <button class="side-group-trigger" type="button" aria-expanded="false"><span>外观</span><small>填充 · 边框</small><svg viewBox="0 0 12 8" fill="none" stroke="currentColor"><path d="m2 2 4 4 4-4"/></svg></button>
+            <div class="side-group-panel">
+              <div class="side-field"><span class="side-field-label">填充颜色</span><div class="swatch-grid" data-swatch-group="fill"></div></div>
+              <div class="side-field"><div class="toggle-row"><span class="side-field-label" style="margin:0">显示边框</span><button class="switch" data-border-switch aria-label="显示边框" aria-pressed="false"></button></div></div>
+              <div class="side-field"><div class="side-field-grid"><select aria-label="侧栏边框样式"><option>实线</option><option>虚线</option><option>点线</option></select><input type="number" min="0" max="40" value="1" aria-label="侧栏边框宽度"></div></div>
+            </div>
+          </section>
+
+          <section class="side-group" data-side-group="more" data-open="false">
+            <button class="side-group-trigger" type="button" aria-expanded="false"><span>更多</span><small>透明度 · 高级</small><svg viewBox="0 0 12 8" fill="none" stroke="currentColor"><path d="m2 2 4 4 4-4"/></svg></button>
+            <div class="side-group-panel">
+              <div class="side-field"><span class="side-field-label">不透明度</span><div class="range-row"><span>◐</span><input class="opacity" type="range" min="0" max="100" value="100"><output>100%</output></div></div>
+              <button class="reset-button" data-reset>恢复当前分类</button>
+            </div>
+          </section>
+        </div>
+
+        <footer class="side-footer"><button class="reset-button" data-reset>恢复全部原始样式</button></footer>
+      </aside>
+
+      <aside class="terminal">
+        <div class="terminal-head"><strong>Agent 终端</strong><span class="online">已连接</span></div>
+        <div class="terminal-body"><b>codex</b><br>正在等待下一条编辑指令。<br><br><span>当前工作区</span><br>AICO-PPT Editor<br><br><span>选中对象</span><br>第 1 页 · H1</div>
+        <div class="terminal-prompt">向 Agent 描述需要调整的内容…</div>
+      </aside>
+    </main>
+  </div>
+
+  <nav class="prototype-switcher" aria-label="原型方案切换">
+    <button class="arrow" data-cycle="-1" aria-label="上一个方案">←</button>
+    <button class="variant-name" data-variant-name></button>
+    <button class="arrow" data-cycle="1" aria-label="下一个方案">→</button>
+  </nav>
+
+  <button class="tweaks-toggle" aria-expanded="false" aria-controls="tweaks-panel">Tweaks</button>
+  <section class="tweaks" id="tweaks-panel" hidden>
+    <strong>Tweaks</strong>
+    <label class="tweak-row"><span>停靠位置</span><select data-tweak="dock"><option value="top">顶部工具栏</option><option value="right">右侧面板</option></select></label>
+    <label class="tweak-row"><span>方案</span><select data-tweak="variant"><option value="a">A · 单行效率栏</option><option value="b">B · 双层分类栏</option><option value="c">C · 极简命令栏</option></select></label>
+    <label class="tweak-row"><span>密度</span><select data-tweak="density"><option value="comfortable">舒适</option><option value="compact">紧凑</option></select></label>
+    <label class="tweak-row"><span>状态</span><select data-tweak="state"><option value="normal">正常</option><option value="busy">应用中</option><option value="empty">未选择</option><option value="error">错误反馈</option></select></label>
+  </section>
+
+  <script>
+    (() => {
+      const variants = [
+        { key:'a', name:'单行效率栏', note:'高频操作常驻，分类抽屉浮层展开' },
+        { key:'b', name:'双层分类栏', note:'分类是主导航，设置在第二层展开' },
+        { key:'c', name:'极简命令栏', note:'窄画布优先，所有属性按类别进入' },
+      ];
+      const root = document.documentElement;
+      const body = document.body;
+      const sample = document.querySelector('.sample-text');
+      const nameButton = document.querySelector('[data-variant-name]');
+      const variantSelect = document.querySelector('[data-tweak="variant"]');
+      const dockSelect = document.querySelector('[data-tweak="dock"]');
+      const fontSelect = document.querySelector('.font-family');
+      const fontSize = document.querySelector('.font-size');
+      const drawerFont = document.querySelector('.drawer-font');
+      const drawerSize = document.querySelector('.drawer-size');
+      const sideFont = document.querySelector('.side-font');
+      const sideSize = document.querySelector('.side-size');
+      const colors = ['#191919','#5f6268','#ffffff','#c7000b','#a80009','#34546f','#7b4f2d','#d4a72c','#65a30d','#0891b2','#4338ca','#be185d','#f4f5f7','#fee2e2','#dbeafe','#dcfce7'];
+      const defaults = { color:'#191919', fill:'transparent', size:54, family:'Huawei Sans', bold:true, italic:false, underline:false, align:'left', lineHeight:1.2, opacity:1, border:false };
+      const state = { ...defaults, open:null, lastTrigger:null };
+
+      function variantFromUrl() {
+        const value = new URLSearchParams(location.search).get('variant')?.toLowerCase();
+        return variants.some(item => item.key === value) ? value : 'a';
+      }
+
+      function dockFromUrl() {
+        return new URLSearchParams(location.search).get('dock') === 'right' ? 'right' : 'top';
+      }
+
+      function setVariant(key, updateUrl = true) {
+        const item = variants.find(entry => entry.key === key) || variants[0];
+        root.dataset.variant = item.key;
+        variantSelect.value = item.key;
+        nameButton.innerHTML = `<b>${item.key.toUpperCase()} · ${item.name}</b><span>${item.note}</span>`;
+        if (updateUrl) {
+          const url = new URL(location.href);
+          url.searchParams.set('variant', item.key);
+          history.replaceState({}, '', url);
+        }
+        closeDrawer();
+      }
+
+      function setDock(dock, updateUrl = true) {
+        const value = dock === 'right' ? 'right' : 'top';
+        root.dataset.dock = value;
+        dockSelect.value = value;
+        closeDrawer();
+        if (value === 'right') {
+          document.querySelectorAll('.side-group').forEach(group => {
+            const open = group.dataset.sideGroup === 'text';
+            group.dataset.open = String(open);
+            group.querySelector('.side-group-trigger').setAttribute('aria-expanded', String(open));
+          });
+        }
+        if (updateUrl) {
+          const url = new URL(location.href);
+          url.searchParams.set('dock', value);
+          history.replaceState({}, '', url);
+        }
+      }
+
+      function closeDrawer({ returnFocus = false } = {}) {
+        document.querySelectorAll('[data-drawer]').forEach(panel => panel.dataset.open = 'false');
+        document.querySelectorAll('[data-drawer-trigger]').forEach(trigger => trigger.setAttribute('aria-expanded', 'false'));
+        const trigger = state.lastTrigger;
+        state.open = null;
+        state.lastTrigger = null;
+        if (returnFocus) trigger?.focus();
+      }
+
+      function openDrawer(name, trigger) {
+        if (state.open === name) { closeDrawer(); return; }
+        closeDrawer();
+        state.open = name;
+        state.lastTrigger = trigger;
+        document.querySelector(`[data-drawer="${name}"]`).dataset.open = 'true';
+        trigger.setAttribute('aria-expanded', 'true');
+      }
+
+      function syncFormats() {
+        sample.style.fontFamily = `"${state.family}", "HarmonyOS Sans SC", sans-serif`;
+        sample.style.fontSize = `clamp(25px, ${Math.max(2.1, state.size / 17.5)}vw, ${state.size}px)`;
+        sample.style.fontWeight = state.bold ? '700' : '400';
+        sample.style.fontStyle = state.italic ? 'italic' : 'normal';
+        sample.style.textDecoration = state.underline ? 'underline' : 'none';
+        sample.style.textAlign = state.align;
+        sample.style.lineHeight = String(state.lineHeight);
+        sample.style.color = state.color;
+        sample.style.background = state.fill;
+        sample.style.opacity = String(state.opacity);
+        sample.style.border = state.border ? '1px solid #c7000b' : '0';
+        fontSelect.value = state.family;
+        drawerFont.value = state.family;
+        sideFont.value = state.family;
+        fontSize.value = String(state.size);
+        drawerSize.value = String(state.size);
+        sideSize.value = String(state.size);
+        document.querySelectorAll('[data-format]').forEach(button => button.setAttribute('aria-pressed', String(state[button.dataset.format])));
+        document.querySelectorAll('[data-align]').forEach(button => button.setAttribute('aria-pressed', String(state.align === button.dataset.align)));
+        document.querySelectorAll('[data-border-switch]').forEach(button => button.setAttribute('aria-pressed', String(state.border)));
+        document.querySelectorAll('.line-height').forEach(input => {
+          input.value = String(Math.round(state.lineHeight * 100));
+          input.nextElementSibling.value = state.lineHeight.toFixed(2);
+        });
+        document.querySelectorAll('.opacity').forEach(input => {
+          input.value = String(Math.round(state.opacity * 100));
+          input.nextElementSibling.value = `${Math.round(state.opacity * 100)}%`;
+        });
+        document.querySelectorAll('[data-swatch-group="text"] .swatch').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.color === state.color)));
+        document.querySelectorAll('[data-swatch-group="fill"] .swatch').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.color === state.fill)));
+      }
+
+      function addSwatches(group, allowTransparent = false) {
+        const values = allowTransparent ? ['transparent', ...colors.slice(2)] : colors;
+        document.querySelectorAll(`[data-swatch-group="${group}"]`).forEach(container => {
+          values.forEach(color => {
+            const button = document.createElement('button');
+            button.className = 'swatch';
+            button.dataset.color = color;
+            button.style.setProperty('--swatch', color === 'transparent'
+              ? 'linear-gradient(135deg,#fff 45%,#c7000b 46% 54%,#fff 55%)' : color);
+            button.setAttribute('aria-label', color === 'transparent' ? '无填充' : color);
+            button.addEventListener('click', () => {
+              state[group === 'text' ? 'color' : 'fill'] = color;
+              syncFormats();
+              closeDrawer();
+            });
+            container.append(button);
+          });
+        });
+      }
+
+      document.querySelectorAll('[data-drawer-trigger]').forEach(trigger => {
+        trigger.addEventListener('click', event => { event.stopPropagation(); openDrawer(trigger.dataset.drawerTrigger, trigger); });
+      });
+      document.querySelectorAll('.side-group-trigger').forEach(trigger => {
+        trigger.addEventListener('click', () => {
+          const group = trigger.closest('.side-group');
+          const nextOpen = group.dataset.open !== 'true';
+          document.querySelectorAll('.side-group').forEach(item => {
+            const open = item === group && nextOpen;
+            item.dataset.open = String(open);
+            item.querySelector('.side-group-trigger').setAttribute('aria-expanded', String(open));
+          });
+        });
+      });
+      document.querySelectorAll('.drawer').forEach(drawer => drawer.addEventListener('click', event => event.stopPropagation()));
+      document.addEventListener('click', () => closeDrawer());
+      document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && state.open) { event.preventDefault(); closeDrawer({ returnFocus:true }); return; }
+        if (!['ArrowLeft','ArrowRight'].includes(event.key)) return;
+        if (event.target.matches('input,select,textarea,[contenteditable="true"]')) return;
+        const index = variants.findIndex(item => item.key === root.dataset.variant);
+        setVariant(variants[(index + (event.key === 'ArrowRight' ? 1 : -1) + variants.length) % variants.length].key);
+      });
+
+      document.querySelectorAll('[data-format]').forEach(button => button.addEventListener('click', () => {
+        state[button.dataset.format] = !state[button.dataset.format];
+        syncFormats();
+      }));
+      document.querySelectorAll('[data-align]').forEach(button => button.addEventListener('click', () => {
+        state.align = button.dataset.align;
+        syncFormats();
+        window.setTimeout(closeDrawer, 120);
+      }));
+      document.querySelectorAll('[data-list]').forEach(button => button.addEventListener('click', () => {
+        const active = button.getAttribute('aria-pressed') === 'true';
+        document.querySelectorAll('[data-list]').forEach(item => item.setAttribute('aria-pressed', 'false'));
+        button.setAttribute('aria-pressed', String(!active));
+      }));
+
+      fontSelect.addEventListener('change', () => { state.family = fontSelect.value; syncFormats(); });
+      drawerFont.addEventListener('change', () => { state.family = drawerFont.value; syncFormats(); });
+      sideFont.addEventListener('change', () => { state.family = sideFont.value; syncFormats(); });
+      fontSize.addEventListener('input', () => { state.size = Number(fontSize.value) || 54; syncFormats(); });
+      drawerSize.addEventListener('input', () => { state.size = Number(drawerSize.value) || 54; syncFormats(); });
+      sideSize.addEventListener('input', () => { state.size = Number(sideSize.value) || 54; syncFormats(); });
+      document.querySelectorAll('.line-height').forEach(input => input.addEventListener('input', event => {
+        state.lineHeight = Number(event.target.value) / 100;
+        syncFormats();
+      }));
+      document.querySelectorAll('.opacity').forEach(input => input.addEventListener('input', event => {
+        state.opacity = Number(event.target.value) / 100;
+        syncFormats();
+      }));
+      document.querySelectorAll('[data-border-switch]').forEach(button => button.addEventListener('click', () => { state.border = !state.border; syncFormats(); }));
+      document.querySelectorAll('[data-reset]').forEach(button => button.addEventListener('click', () => { Object.assign(state, defaults); syncFormats(); closeDrawer(); }));
+
+      document.querySelectorAll('[data-cycle]').forEach(button => button.addEventListener('click', () => {
+        const index = variants.findIndex(item => item.key === root.dataset.variant);
+        const next = (index + Number(button.dataset.cycle) + variants.length) % variants.length;
+        setVariant(variants[next].key);
+      }));
+      nameButton.addEventListener('click', () => setVariant(variants[(variants.findIndex(item => item.key === root.dataset.variant) + 1) % variants.length].key));
+      variantSelect.addEventListener('change', () => setVariant(variantSelect.value));
+      dockSelect.addEventListener('change', () => setDock(dockSelect.value));
+      document.querySelector('.side-close').addEventListener('click', () => setDock('top'));
+      document.querySelector('[data-tweak="density"]').addEventListener('change', event => root.dataset.density = event.target.value);
+      document.querySelector('[data-tweak="state"]').addEventListener('change', event => { body.dataset.sim = event.target.value; closeDrawer(); });
+
+      const tweaksToggle = document.querySelector('.tweaks-toggle');
+      const tweaks = document.querySelector('.tweaks');
+      tweaksToggle.addEventListener('click', event => {
+        event.stopPropagation();
+        tweaks.hidden = !tweaks.hidden;
+        tweaksToggle.setAttribute('aria-expanded', String(!tweaks.hidden));
+      });
+      tweaks.addEventListener('click', event => event.stopPropagation());
+      document.addEventListener('click', () => { tweaks.hidden = true; tweaksToggle.setAttribute('aria-expanded', 'false'); });
+
+      addSwatches('text');
+      addSwatches('fill', true);
+      setVariant(variantFromUrl(), false);
+      setDock(dockFromUrl(), false);
+      syncFormats();
+    })();
+  </script>
+</body>
+</html>

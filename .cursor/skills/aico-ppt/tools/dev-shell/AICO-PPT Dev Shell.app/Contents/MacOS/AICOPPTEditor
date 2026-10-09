@@ -1,0 +1,45 @@
+#!/bin/sh
+
+# Finder 启动时没有用户 shell 的 PATH；补上 Homebrew 与常见系统路径。
+PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${PATH:-}"
+export PATH
+
+APP_MACOS_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+SKILL_ROOT=$(CDPATH= cd -- "$APP_MACOS_DIR/../../../../.." && pwd)
+LAUNCHER="$SKILL_ROOT/scripts/deck-editor.py"
+
+if [ ! -f "$LAUNCHER" ]; then
+  /usr/bin/osascript - "AICO-PPT Dev Shell 无法启动" "调试应用必须保留在 AICO-PPT 仓库的 tools/dev-shell 目录中。正式编辑入口位于 AICO-Harness。" <<'APPLESCRIPT'
+on run argv
+  display alert (item 1 of argv) message (item 2 of argv) as critical buttons {"好"} default button "好"
+end run
+APPLESCRIPT
+  exit 2
+fi
+
+PYTHON_BIN=$(command -v python3 || true)
+if [ -z "$PYTHON_BIN" ]; then
+  /usr/bin/osascript - "AICO-PPT 编辑器无法启动" "找不到 Python 3。请先安装 Python 3，再重新双击应用。" <<'APPLESCRIPT'
+on run argv
+  display alert (item 1 of argv) message (item 2 of argv) as critical buttons {"好"} default button "好"
+end run
+APPLESCRIPT
+  exit 2
+fi
+
+# LaunchServices 会把长期存活的 shell 主进程当作单实例 App；这里只负责派发。
+# Python 启动器使用原子实例登记表：重复双击会激活既有工作台；若浏览器标签
+# 已关闭，则先结束无页面的旧服务再启动新快照，避免两个入口互相争锁。
+umask 077
+APP_LOG_DIR="${TMPDIR:-/tmp}/aico-ppt-editor"
+/bin/mkdir -p "$APP_LOG_DIR"
+if [ "$(/usr/sbin/sysctl -n hw.optional.arm64 2>/dev/null || true)" = "1" ]; then
+  # LaunchServices 可能把脚本型 .app 放进 Rosetta 进程树。显式使用本机 arm64，
+  # 避免已安装的 arm64 Python 扩展在 Editor 诊断中被误报为缺失。
+  /usr/bin/nohup /usr/bin/arch -arm64 "$PYTHON_BIN" "$LAUNCHER" --app "$@" \
+    </dev/null >>"$APP_LOG_DIR/launcher.log" 2>&1 &
+else
+  /usr/bin/nohup "$PYTHON_BIN" "$LAUNCHER" --app "$@" \
+    </dev/null >>"$APP_LOG_DIR/launcher.log" 2>&1 &
+fi
+exit 0

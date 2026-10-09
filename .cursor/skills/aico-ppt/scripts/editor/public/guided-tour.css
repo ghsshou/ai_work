@@ -1,0 +1,164 @@
+.guided-tour-trigger {
+  width:34px;
+  height:34px;
+  min-width:34px;
+  min-height:34px;
+  display:inline-grid;
+  place-items:center;
+  padding:0;
+  border:1px solid rgba(30,34,40,.14);
+  border-radius:50%;
+  color:var(--red, var(--brand-red));
+  background:rgba(255,255,255,.84);
+  box-shadow:0 2px 8px rgba(31,35,41,.08);
+  font-size:15px;
+  font-weight:800;
+  line-height:1;
+  transition:background .18s ease, border-color .18s ease, transform .18s ease;
+}
+.guided-tour-trigger:hover {
+  border-color:var(--red, var(--brand-red));
+  background:rgba(255,255,255,.98);
+  transform:translateY(-1px);
+}
+.guided-tour-trigger:focus-visible {
+  outline:2px solid var(--red, var(--brand-red));
+  outline-offset:2px;
+}
+.onboarding-tour {
+  position:fixed;
+  z-index:720;
+  inset:0;
+  overflow:hidden;
+}
+.tour-spotlight {
+  position:fixed;
+  z-index:720;
+  border:2px solid var(--red, var(--brand-red));
+  border-radius:18px;
+  box-shadow:
+    0 0 0 9999px rgba(18,20,24,.66),
+    0 10px 36px rgba(199,0,11,.24);
+  pointer-events:none;
+  transition:left .22s ease, top .22s ease, width .22s ease, height .22s ease;
+}
+.tour-arrow {
+  position:fixed;
+  z-index:721;
+  inset:0;
+  width:100%;
+  height:100%;
+  overflow:visible;
+  pointer-events:none;
+}
+.tour-arrow-body {
+  fill:var(--red, var(--brand-red));
+  stroke:var(--red-dark, var(--brand-red-deep));
+  stroke-linejoin:round;
+  stroke-width:5;
+  vector-effect:non-scaling-stroke;
+  filter:drop-shadow(0 8px 10px rgba(20,24,30,.22));
+}
+.tour-arrow-hatching path {
+  fill:none;
+  stroke:rgba(255,255,255,.82);
+  stroke-linecap:round;
+  stroke-width:4;
+  vector-effect:non-scaling-stroke;
+}
+.tour-card {
+  position:fixed;
+  z-index:722;
+  width:min(360px, calc(100vw - 48px));
+  padding:20px;
+  border:1px solid rgba(255,255,255,.88);
+  border-radius:18px;
+  color:var(--ink);
+  background:rgba(255,255,255,.98);
+  box-shadow:0 22px 70px rgba(20,24,30,.24);
+  transition:left .22s ease, top .22s ease;
+}
+.tour-card-header,
+.tour-card-footer,
+.tour-actions { display:flex; align-items:center; }
+.tour-card-header,
+.tour-card-footer { justify-content:space-between; gap:18px; }
+.tour-card-header > span {
+  color:var(--red, var(--brand-red));
+  font-size:10px;
+  font-weight:750;
+  letter-spacing:.12em;
+}
+.tour-skip,
+.tour-previous,
+.tour-step-action,
+.tour-next {
+  border:0;
+  font-weight:700;
+}
+.tour-skip {
+  padding:5px 0;
+  color:var(--muted, var(--ink-secondary));
+  background:transparent;
+  font-size:10px;
+}
+.tour-skip:hover,
+.tour-skip:focus-visible { color:var(--red, var(--brand-red)); }
+.tour-card h2 {
+  margin:16px 0 8px;
+  font-size:22px;
+  line-height:1.3;
+  text-wrap:pretty;
+}
+.tour-card > p {
+  min-height:46px;
+  margin:0;
+  color:var(--muted, var(--ink-secondary));
+  font-size:12px;
+  line-height:1.75;
+  text-wrap:pretty;
+}
+.tour-card-footer { margin-top:20px; }
+.tour-dots { display:flex; align-items:center; gap:6px; }
+.tour-dots i {
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:#d9dce0;
+  transition:width .18s ease, background .18s ease;
+}
+.tour-dots i[data-active="true"] {
+  width:20px;
+  border-radius:999px;
+  background:var(--red, var(--brand-red));
+}
+.tour-actions { gap:8px; }
+.tour-previous,
+.tour-step-action,
+.tour-next {
+  min-height:36px;
+  padding:0 14px;
+  border-radius:10px;
+  font-size:11px;
+}
+.tour-previous,
+.tour-step-action { color:#5e6570; background:#eef0f2; }
+.tour-next { color:#fff; background:var(--red, var(--brand-red)); }
+.tour-previous:hover,
+.tour-previous:focus-visible,
+.tour-step-action:hover,
+.tour-step-action:focus-visible { background:#e3e5e9; }
+.tour-next:hover,
+.tour-next:focus-visible { background:var(--red-dark, var(--brand-red-deep)); }
+.tour-previous:focus-visible,
+.tour-step-action:focus-visible,
+.tour-next:focus-visible,
+.tour-skip:focus-visible { outline:2px solid var(--red, var(--brand-red)); outline-offset:2px; }
+.tour-previous:disabled,
+.tour-step-action:disabled { opacity:.45; }
+body[data-tour-open="true"] { overflow:hidden; }
+@media (prefers-reduced-motion:reduce) {
+  .tour-spotlight,
+  .tour-card,
+  .tour-dots i { transition:none; }
+}
