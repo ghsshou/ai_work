@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the design-time AI cluster simulator workload-engine slides (v2)."""
+"""Build the design-time AI cluster simulator workload-engine slides."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.oxml.ns import qn
 from pptx.util import Inches, Pt
 
-OUT = "docs/design-simulator/设计态仿真器_负载引擎立项_v2.pptx"
+OUT = "docs/design-simulator/设计态仿真器_负载引擎立项_v1.pptx"
 FONT = "微软雅黑"
 
 BG = RGBColor(0xF3, 0xF5, 0xF8)
@@ -174,8 +174,8 @@ def grid(slide, l, t, w, h, labels, cols, fill, line, size=9, gap=0.06):
 
 
 def layer_tag(slide, t, h, title, sub, fill):
-    sh = rect(slide, Inches(0.36), t, Inches(0.78), h, fill)
-    text(slide, Inches(0.36), t, Inches(0.78), h,
+    sh = rect(slide, Inches(0.36), t, Inches(0.98), h, fill)
+    text(slide, Inches(0.36), t, Inches(0.98), h,
          [[(title, 10.5, True, WHITE)]] + ([[(sub, 8, False, WHITE)]] if sub else []),
          align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
     return sh
@@ -220,92 +220,97 @@ def slide_main(prs):
         "以「负载引擎」为核心的设计态仿真器：负载刻画准，系统设计才可信",
         "底层 NPU / 内存存储 / 网络仿真已具备；本项目补齐负载的画像、生成与导入，形成「真实负载 → 可外推负载 → 设计结论」闭环。")
 
-    x0 = Inches(1.2)
-    x1 = Inches(8.86)
+    x0 = Inches(1.42)
+    x1 = Inches(12.97)
     full = x1 - x0
     mid = x0 + full / 2
 
+    # Layer 1: inputs
     t, h = Inches(1.2), Inches(0.46)
     layer_tag(s, t, h, "输入层", None, BLUE)
     grid(s, x0, t, full, h, [
-        "生产 Trace\nmsprof / HCCL / 服务日志",
+        "生产 Trace（msprof / HCCL / 服务日志）",
         "模型结构与并行配置",
         "业务流量预测与 SLO 分级",
         "未来模型与集群规模假设",
-    ], 4, BLUE_BG, None, 8.8)
+    ], 4, BLUE_BG, None, 9.5)
     down_arrow(s, mid, t + h + Inches(0.03))
 
-    et, eh = Inches(1.86), Inches(3.92)
+    # Layer 2: workload engine
+    et, eh = Inches(1.86), Inches(3.78)
     layer_tag(s, et, eh, "负载引擎", "本项目核心", CORE)
     shape(s, MSO_SHAPE.ROUNDED_RECTANGLE, x0, et, full, eh, CORE_BG, CORE, 1.75, 0.02)
     pad = Inches(0.08)
-    gap = Inches(0.07)
+    cal_w = Inches(1.78)
     ix0 = x0 + pad
-    iw = full - 2 * pad
+    iw = full - 2 * pad - cal_w - pad
+    gap = Inches(0.08)
     mw = (iw - 2 * gap) / 3
-    r1t, r1h = et + pad, Inches(1.86)
-    th = Inches(0.44)
-    module(s, ix0, r1t, mw, r1h, "① 基于计算图展开的\n模型负载画像", [
-        "计算图抽取与并行策略展开",
-        "多级算子代价模型",
-        "通信量与访存量推导",
-        "MoE 路由与 KV 动态建模",
-    ], 1, th)
-    module(s, ix0 + mw + gap, r1t, mw, r1h, "② 基于随机过程的\n到达与请求建模", [
-        "突发到达与日周期建模",
-        "输入/输出长度联合建模",
-        "会话与前缀复用建模",
-        "训练作业规模与故障建模",
-    ], 1, th)
-    module(s, ix0 + 2 * (mw + gap), r1t, mw, r1h, "③ 基于统计拟合的\nTrace 重构与外推", [
-        "多源 Trace 对齐与依赖重建",
-        "混合分布拟合与检验",
-        "rank 对称规模外推",
-        "跨硬件重定向与 what-if",
-    ], 1, th)
+    r1t, r1h = et + pad, Inches(1.82)
+    module(s, ix0, r1t, mw, r1h, "① 基于计算图展开的模型负载画像", [
+        "框架计算图抽取", "并行策略符号化展开",
+        "多级算子代价模型", "通信量与访存量推导",
+        "MoE 路由偏斜建模", "KV Cache 动态增长建模",
+    ], 2)
+    module(s, ix0 + mw + gap, r1t, mw, r1h, "② 基于随机过程的到达与请求建模", [
+        "突发到达建模\nMMPP / Hawkes", "日周期与多租户叠加",
+        "输入/输出长度\nCopula 联合建模", "会话与前缀复用建模",
+        "训练作业规模与故障建模", "SLO 分级条件化生成",
+    ], 2)
+    module(s, ix0 + 2 * (mw + gap), r1t, mw, r1h, "③ 基于统计拟合的 Trace 重构与外推", [
+        "多源 Trace 时钟对齐\n与依赖重建", "迭代周期性压缩",
+        "混合分布拟合\n与 KS/W1 检验", "rank 对称规模外推\n1K → 100K",
+        "跨硬件负载重定向", "未来模型 what-if 改写",
+    ], 2)
 
-    tw = Inches(1.62)
-    rows = [
-        ("④ 面向 DSE 的\n负载数据工厂", [
-            "多源采集\n与脱敏", "负载特征化\n抽取", "参数化/生成式\n负载合成", "场景化负载库\n版本管理",
-        ], True),
-        ("⑤ 统一负载 IR\n与多保真导入", [
-            "硬件无关执行图 IR\n兼容 Chakra ET", "L0/L1/L2\n多保真切换", "集合通信\n分解为网络流", "访存与 KV 流量\n映射内存仿真",
-        ], False),
-        ("⑥ 基于实测对标的\n闭环校准", [
-            "小规模集群\n实测对标", "分层误差归因", "代价模型\n系数回灌", "分布 + 效用\n双保真评估",
-        ], False),
-    ]
-    rt = r1t + r1h + gap
-    rh = (et + eh - pad - rt - 2 * gap) / 3
-    for title, labels, chev in rows:
-        module_row(s, ix0, rt, iw, rh, title, labels, tw, chev)
-        rt += rh + gap
+    r2t, r2h = r1t + r1h + gap, Inches(0.84)
+    module_row(s, ix0, r2t, iw, r2h, "④ 面向 DSE 的\n流水线化负载数据工厂", [
+        "多源采集\n与脱敏", "负载特征化\n抽取", "参数化 / 生成式\n负载合成",
+        "分布 + 效用\n保真校验", "场景化负载库\n版本管理",
+    ], chevron=True)
 
-    down_arrow(s, mid, et + eh + Inches(0.03))
-    shape(s, MSO_SHAPE.UP_ARROW, x1 - Inches(0.8), et + eh + Inches(0.03),
+    r3t = r2t + r2h + gap
+    r3h = et + eh - pad - r3t
+    module_row(s, ix0, r3t, iw, r3h, "⑤ 统一负载 IR\n与多保真导入", [
+        "硬件无关执行图 IR\n兼容 Chakra ET", "L0 解析 / L1 算子图\n/ L2 包级切换",
+        "集合通信\n分解为网络流", "访存与 KV 流量\n映射内存仿真", "代表迭代\n采样加速",
+    ])
+
+    cx = ix0 + iw + pad
+    ct, ch = et + pad, eh - 2 * pad
+    card(s, cx, ct, cal_w, ch, WHITE, CORE, 1.0, 0.04)
+    text(s, cx + Inches(0.04), ct + Inches(0.03), cal_w - Inches(0.08), Inches(0.5),
+         "⑥ 基于实测对标的\n闭环校准", 10, True, CORE, PP_ALIGN.CENTER, MSO_ANCHOR.MIDDLE)
+    grid(s, cx + Inches(0.07), ct + Inches(0.58), cal_w - Inches(0.14), ch - Inches(0.65), [
+        "小规模集群实测对标", "分层误差归因", "代价模型系数回灌",
+        "分布保真评估", "效用保真评估",
+    ], 1, CORE_BG, CORE_LT, 8.8)
+
+    down_arrow(s, ix0 + iw / 2, et + eh + Inches(0.03))
+    shape(s, MSO_SHAPE.UP_ARROW, cx + cal_w / 2 - Inches(0.16), et + eh + Inches(0.03),
           Inches(0.32), Inches(0.14), CORE, adj=0.5)
 
-    kt, kh = et + eh + Inches(0.2), Inches(0.44)
+    # Layer 3: simulation kernels
+    kt, kh = et + eh + Inches(0.2), Inches(0.46)
     layer_tag(s, kt, kh, "仿真内核", "已具备", MUTED)
-    grid(s, x0, kt, full, kh, ["NPU 仿真", "内存 / 存储仿真", "网络仿真"], 3, GRAY_BG, LINE, 9.5, 0.08)
+    grid(s, x0, kt, full, kh, ["NPU 仿真", "内存 / 存储仿真", "网络仿真"], 3, GRAY_BG, LINE, 10, 0.08)
     down_arrow(s, mid, kt + kh + Inches(0.03))
 
-    ot, oh = kt + kh + Inches(0.2), Inches(0.5)
+    # Layer 4: design outputs
+    ot, oh = kt + kh + Inches(0.2), Inches(0.46)
     layer_tag(s, ot, oh, "设计输出", "DSE", GREEN)
     grid(s, x0, ot, full, oh, [
-        "超节点规模\n与组网拓扑", "Scale-up/out\n带宽配比", "内存/存储\n层级容量",
-        "PD 配比\n与并行策略", "瓶颈定位\n与 TCO 评估",
-    ], 5, GREEN_BG, None, 8.8, 0.07)
+        "超节点规模与组网拓扑", "Scale-up / Scale-out 带宽配比", "HBM / 池化内存 / 存储层级容量",
+        "PD 配比与并行策略", "瓶颈定位与 TCO / 能效评估",
+    ], 5, GREEN_BG, None, 9.5, 0.08)
 
-    footer(s, 1, "设计态 AI 集群仿真器  ·  负载引擎立项  ·  v2  ·  内部讨论稿")
+    footer(s, 1, "设计态 AI 集群仿真器  ·  负载引擎立项  ·  内部讨论稿")
     s.notes_slide.notes_text_frame.text = (
         "讲解主线：底层算力/内存/网络仿真解决的是「系统怎么跑」，而设计态真正的输入是「跑什么」。"
         "设计态的目标系统和未来模型往往还不存在，所以负载不能只回放历史 Trace，必须可画像、可参数化、可外推。\n"
         "①通过计算图展开刻画单作业内部的计算/通信/访存结构；②通过随机过程刻画多作业、多请求在时间上的叠加；"
         "③通过统计拟合把真实生产 Trace 变成可放大、可迁移的负载；④把以上能力流水线化、资产化，批量产出 DSE 输入；"
-        "⑤统一 IR 让同一份负载以不同保真度驱动已有仿真内核；⑥仿真结果与实测对标，误差回灌，保证可信度。\n"
-        "右侧 1/3 版面预留。")
+        "⑤统一 IR 让同一份负载以不同保真度驱动已有仿真内核；⑥仿真结果与实测对标，误差回灌，保证可信度。")
     return s
 
 
