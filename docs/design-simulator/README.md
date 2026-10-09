@@ -11,11 +11,12 @@
 
 ## 框架侧仿真能力（单页）
 
-训练、推理、RL 等框架的 DAG 导出与场景泛化。左 1/2 为分层框图，右 1/2 为三项关键技术；标题下为面向场景、竞争力目标、技术挑战。v2 把创建、变换、编排拆成 6 个模块、共 36 个子框，输入层直接到输出层。配色按 AICO-PPT：品牌红只标 DAG 引擎，输入和输出用灰蓝。
+训练、推理、RL 等框架的 DAG 导出与场景泛化。左 1/2 为分层框图，右 1/2 为三项关键技术；标题下为面向场景、竞争力目标、技术挑战。v3 把中间画成三段顺序：先并列抽出再收成 DAG，再沿规模链和序列链改写并派生域图，最后编排重放。每组约 4 个框。输入层直接到输出层。配色按 AICO-PPT：品牌红只标 DAG 引擎，输入和输出用灰蓝。
 
 | 版本 | 文件 | 说明 |
 |---|---|---|
-| **v2（现行）** | [PPT](./设计态仿真器_框架DAG仿真能力_v2.pptx) · [build_framework_dag_v2.py](./scripts/build_framework_dag_v2.py) | 左半页六个模块、各 6 个子框；输入直达输出，不含仿真核。配色用 AICO-PPT 品牌红 + 灰蓝 |
+| **v3（现行）** | [PPT](./设计态仿真器_框架DAG仿真能力_v3.pptx) · [build_framework_dag_v3.py](./scripts/build_framework_dag_v3.py) | 三段顺序：先抽出再收成 DAG；规模链与序列链并排向下，汇合后分出域图；最后编排重放。每组约 4 步，不含仿真核 |
+| v2（归档） | [PPT](./设计态仿真器_框架DAG仿真能力_v2.pptx) · [build_framework_dag_v2.py](./scripts/build_framework_dag_v2.py) | 六个模块各 6 个子框的表格排版 |
 | v1（归档） | [PPT](./设计态仿真器_框架DAG仿真能力_v1.pptx) · [build_framework_dag_v1.py](./scripts/build_framework_dag_v1.py) | 三模块各 4 子框，含仿真核层 |
 
 ## 主页结构
@@ -49,6 +50,7 @@ v2 中①②③为三列、各 4 个纵向子框；④⑤⑥为横向行，各 4
 pip install python-pptx
 python3 docs/design-simulator/scripts/build_pptx.py      # v2
 python3 docs/design-simulator/scripts/build_pptx_v1.py   # v1
+python3 docs/design-simulator/scripts/build_framework_dag_v3.py
 python3 docs/design-simulator/scripts/build_framework_dag_v2.py
 python3 docs/design-simulator/scripts/build_framework_dag_v1.py
 ```
