@@ -78,7 +78,7 @@ def text(slide, l, t, w, h, content, size=11, bold=False, color=INK,
     tf.auto_size = None
     _margins(tf)
     _anchor(tf, anchor)
-    lines = content if isinstance(content, list) else [content]
+    lines = content if isinstance(content, list) else content.split("\n")
     for i, line in enumerate(lines):
         p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
         p.alignment = align
@@ -123,11 +123,12 @@ def label_shape(sh, content, size, bold, color, align=PP_ALIGN.CENTER):
     tf.word_wrap = True
     _margins(tf, 0.03, 0.01)
     _anchor(tf, MSO_ANCHOR.MIDDLE)
-    p = tf.paragraphs[0]
-    p.alignment = align
-    run = p.add_run()
-    run.text = content
-    _style(run, size, bold, color)
+    for i, line in enumerate(content.split("\n")):
+        p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
+        p.alignment = align
+        run = p.add_run()
+        run.text = line
+        _style(run, size, bold, color)
 
 
 def arrow(slide, l, t, w, h, color=BLUE, kind=MSO_SHAPE.RIGHT_ARROW):
@@ -156,25 +157,60 @@ def title_block(slide, kicker, title, subtitle):
     text(slide, Inches(0.36), Inches(0.82), Inches(12.6), Inches(0.32), subtitle, 11.5, False, MUTED)
 
 
-def bullets(slide, l, t, w, h, items, size=9.5, color=INK, dot=CORE):
-    lines = []
-    for it in items:
-        if isinstance(it, tuple):
-            head, body = it
-            lines.append([("▪ ", size, True, dot), (head, size, True, INK), (body, size, False, color)])
-        else:
-            lines.append([("▪ ", size, True, dot), (it, size, False, color)])
-    return text(slide, l, t, w, h, lines, size)
+def box(slide, l, t, w, h, label, fill, line=None, size=9, bold=False, color=INK, adj=0.12):
+    sh = card(slide, l, t, w, h, fill, line, 0.75, adj)
+    label_shape(sh, label, size, bold, color)
+    return sh
 
 
-def module_card(slide, l, t, w, h, num, title, en, items):
-    card(slide, l, t, w, h, WHITE, CORE, 1.0)
-    head = shape(slide, MSO_SHAPE.ROUNDED_RECTANGLE, l, t, w, Inches(0.36), CORE_LT, adj=0.2)
-    text(slide, l + Inches(0.06), t + Inches(0.02), w - Inches(0.1), Inches(0.32),
-         [[(num + " ", 11.5, True, CORE), (title, 11.5, True, INK), ("  " + en if en else "", 8, False, MUTED)]],
-         anchor=MSO_ANCHOR.MIDDLE)
-    bullets(slide, l + Inches(0.06), t + Inches(0.42), w - Inches(0.1), h - Inches(0.46), items)
-    return head
+def grid(slide, l, t, w, h, labels, cols, fill, line, size=9, gap=0.06):
+    rows = -(-len(labels) // cols)
+    g = Inches(gap)
+    cw = (w - (cols - 1) * g) / cols
+    rh = (h - (rows - 1) * g) / rows
+    for i, lab in enumerate(labels):
+        r, c = divmod(i, cols)
+        box(slide, l + c * (cw + g), t + r * (rh + g), cw, rh, lab, fill, line, size)
+
+
+def layer_tag(slide, t, h, title, sub, fill):
+    sh = rect(slide, Inches(0.36), t, Inches(0.98), h, fill)
+    text(slide, Inches(0.36), t, Inches(0.98), h,
+         [[(title, 10.5, True, WHITE)]] + ([[(sub, 8, False, WHITE)]] if sub else []),
+         align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
+    return sh
+
+
+def down_arrow(slide, x, t, h=Inches(0.14), color=DIM):
+    return shape(slide, MSO_SHAPE.DOWN_ARROW, x - Inches(0.16), t, Inches(0.32), h, color, adj=0.5)
+
+
+def module(slide, l, t, w, h, title, labels, cols, title_h=Inches(0.3)):
+    card(slide, l, t, w, h, WHITE, CORE, 1.0, 0.04)
+    text(slide, l + Inches(0.05), t + Inches(0.02), w - Inches(0.1), title_h, title,
+         10, True, CORE, PP_ALIGN.CENTER, MSO_ANCHOR.MIDDLE)
+    pad = Inches(0.07)
+    grid(slide, l + pad, t + title_h + Inches(0.02), w - 2 * pad, h - title_h - Inches(0.09),
+         labels, cols, CORE_BG, CORE_LT, 8.8)
+
+
+def module_row(slide, l, t, w, h, title, labels, title_w=Inches(1.9), chevron=False):
+    card(slide, l, t, w, h, WHITE, CORE, 1.0, 0.08)
+    text(slide, l + Inches(0.06), t, title_w - Inches(0.06), h, title,
+         10, True, CORE, PP_ALIGN.CENTER, MSO_ANCHOR.MIDDLE)
+    pad = Inches(0.07)
+    x0 = l + title_w + Inches(0.04)
+    iw = w - title_w - Inches(0.04) - pad
+    if not chevron:
+        grid(slide, x0, t + pad, iw, h - 2 * pad, labels, len(labels), CORE_BG, CORE_LT, 8.8)
+        return
+    n = len(labels)
+    cw = iw / n
+    for i, lab in enumerate(labels):
+        kind = MSO_SHAPE.PENTAGON if i == 0 else MSO_SHAPE.CHEVRON
+        sh = shape(slide, kind, x0 + i * cw, t + pad, cw + Inches(0.05), h - 2 * pad,
+                   CORE_BG, CORE_LT, 0.75, adj=0.22)
+        label_shape(sh, lab, 8.8, False, INK)
 
 
 def slide_main(prs):
@@ -182,183 +218,99 @@ def slide_main(prs):
     title_block(
         s, "设计态 AI 集群仿真器  ·  立项核心",
         "以「负载引擎」为核心的设计态仿真器：负载刻画准，系统设计才可信",
-        "底层 NPU / 内存存储 / 网络仿真能力已具备；本项目聚焦负载的画像、到达建模、Trace 拟合外推、数据工厂与统一导入，"
-        "形成「真实负载 → 可外推负载 → 设计结论」闭环。")
+        "底层 NPU / 内存存储 / 网络仿真已具备；本项目补齐负载的画像、生成与导入，形成「真实负载 → 可外推负载 → 设计结论」闭环。")
 
-    top = Inches(1.25)
-    bottom = Inches(6.42)
+    x0 = Inches(1.42)
+    x1 = Inches(12.97)
+    full = x1 - x0
+    mid = x0 + full / 2
 
-    # ---- Left: inputs + design-time traits ----
-    lx, lw = Inches(0.36), Inches(2.18)
-    text(s, lx, top, lw, Inches(0.28), "输入源", 11.5, True, BLUE_DK)
-    inputs = [
-        ("生产 Trace", "训练 Profiling（msprof/Kineto）、HCCL 通信日志、推理服务请求日志、集群遥测"),
-        ("模型与并行配置", "模型结构定义、并行策略、目标模型假设（如 10T MoE、百万上下文）"),
-        ("业务规划", "流量预测、SLO 等级、租户结构、训推混部比例"),
-    ]
-    y = top + Inches(0.32)
-    for head, body in inputs:
-        card(s, lx, y, lw, Inches(0.92), BLUE_BG, None)
-        text(s, lx + Inches(0.05), y + Inches(0.04), lw - Inches(0.08), Inches(0.86),
-             [[(head, 10, True, BLUE_DK)], [(body, 8.8, False, INK)]])
-        y += Inches(1.0)
+    # Layer 1: inputs
+    t, h = Inches(1.2), Inches(0.46)
+    layer_tag(s, t, h, "输入层", None, BLUE)
+    grid(s, x0, t, full, h, [
+        "生产 Trace（msprof / HCCL / 服务日志）",
+        "模型结构与并行配置",
+        "业务流量预测与 SLO 分级",
+        "未来模型与集群规模假设",
+    ], 4, BLUE_BG, None, 9.5)
+    down_arrow(s, mid, t + h + Inches(0.03))
 
-    ty = y + Inches(0.04)
-    th = bottom - ty
-    card(s, lx, ty, lw, th, WHITE, BLUE, 1.0)
-    text(s, lx + Inches(0.06), ty + Inches(0.04), lw - Inches(0.1), th - Inches(0.06), [
-        [("设计态 ≠ 在线工具", 10, True, BLUE_DK)],
-        [("▪ ", 8.8, True, BLUE), ("无实时约束：以时间换精度，可做包级细粒度仿真", 8.8, False, INK)],
-        [("▪ ", 8.8, True, BLUE), ("目标系统与模型往往尚不存在：负载必须", 8.8, False, INK),
-         ("可参数化、可外推", 8.8, True, CORE), ("，不能只靠回放", 8.8, False, INK)],
-        [("▪ ", 8.8, True, BLUE), ("服务于设计空间探索（DSE）：需批量扫描上千种配置", 8.8, False, INK)],
-    ])
-
-    arrow(s, Inches(2.58), Inches(3.55), Inches(0.24), Inches(0.42), CORE)
-
-    # ---- Center: workload engine ----
-    cx, cw = Inches(2.86), Inches(7.12)
-    shape(s, MSO_SHAPE.ROUNDED_RECTANGLE, cx, top, cw, bottom - top, CORE_BG, CORE, 1.75, 0.025)
-    text(s, cx + Inches(0.1), top + Inches(0.03), cw - Inches(0.2), Inches(0.32),
-         [[("负载引擎 Workload Engine", 13, True, CORE),
-           ("   本项目核心：让负载可度量、可生成、可校准", 9.5, False, MUTED)]],
-         anchor=MSO_ANCHOR.MIDDLE)
-
+    # Layer 2: workload engine
+    et, eh = Inches(1.86), Inches(3.78)
+    layer_tag(s, et, eh, "负载引擎", "本项目核心", CORE)
+    shape(s, MSO_SHAPE.ROUNDED_RECTANGLE, x0, et, full, eh, CORE_BG, CORE, 1.75, 0.02)
+    pad = Inches(0.08)
+    cal_w = Inches(1.78)
+    ix0 = x0 + pad
+    iw = full - 2 * pad - cal_w - pad
     gap = Inches(0.08)
-    mx = cx + Inches(0.1)
-    mw = (cw - Inches(0.2) - 2 * gap) / 3
-    my, mh = top + Inches(0.4), Inches(2.0)
-    module_card(s, mx, my, mw, mh, "①", "模型画像", "", [
-        ("结构画像：", "Dense/MoE/长序列；层数、专家数、TopK"),
-        ("并行展开：", "TP/PP/DP/EP/CP → 每 rank 算子图 + 通信"),
-        ("算子代价：", "Roofline + 实测表 + 回归外推"),
-        ("动态特征：", "MoE 路由偏斜、KV 增长、重计算"),
-    ])
-    module_card(s, mx + mw + gap, my, mw, mh, "②", "到达与请求分布", "", [
-        ("到达过程：", "突发 MMPP/Hawkes、日周期、多租户叠加"),
-        ("请求形态：", "输入/输出长度联合分布、前缀复用、多轮/Agent"),
-        ("训练作业：", "到达、规模幂律、时长、故障"),
-        ("条件化：", "按业务/时段/SLO 参数化"),
-    ])
-    module_card(s, mx + 2 * (mw + gap), my, mw, mh, "③", "Trace 拟合与外推", "", [
-        ("对齐提取：", "跨 rank 时钟对齐、依赖与关键路径重建"),
-        ("压缩：", "代表迭代 + 扰动统计"),
-        ("拟合：", "混合分布（EM）+ KS/W1 检验"),
-        ("外推：", "千卡→十万卡扩展；跨硬件重定向"),
-    ])
+    mw = (iw - 2 * gap) / 3
+    r1t, r1h = et + pad, Inches(1.82)
+    module(s, ix0, r1t, mw, r1h, "① 基于计算图展开的模型负载画像", [
+        "框架计算图抽取", "并行策略符号化展开",
+        "多级算子代价模型", "通信量与访存量推导",
+        "MoE 路由偏斜建模", "KV Cache 动态增长建模",
+    ], 2)
+    module(s, ix0 + mw + gap, r1t, mw, r1h, "② 基于随机过程的到达与请求建模", [
+        "突发到达建模\nMMPP / Hawkes", "日周期与多租户叠加",
+        "输入/输出长度\nCopula 联合建模", "会话与前缀复用建模",
+        "训练作业规模与故障建模", "SLO 分级条件化生成",
+    ], 2)
+    module(s, ix0 + 2 * (mw + gap), r1t, mw, r1h, "③ 基于统计拟合的 Trace 重构与外推", [
+        "多源 Trace 时钟对齐\n与依赖重建", "迭代周期性压缩",
+        "混合分布拟合\n与 KS/W1 检验", "rank 对称规模外推\n1K → 100K",
+        "跨硬件负载重定向", "未来模型 what-if 改写",
+    ], 2)
 
-    # Data factory pipeline
-    fy, fh = my + mh + Inches(0.08), Inches(1.2)
-    fx, fw = mx, cw - Inches(0.2)
-    card(s, fx, fy, fw, fh, WHITE, CORE, 1.0)
-    text(s, fx + Inches(0.06), fy + Inches(0.03), fw, Inches(0.3),
-         [[("④ ", 11.5, True, CORE), ("负载数据工厂", 11.5, True, INK), ("  Workload Data Factory", 8, False, MUTED)]],
-         anchor=MSO_ANCHOR.MIDDLE)
-    stages = ["采集", "清洗/脱敏", "特征化", "统计/生成", "合成", "保真校验", "版本入库"]
-    px = fx + Inches(0.08)
-    pw = (fw - Inches(0.16)) / len(stages)
-    for i, st in enumerate(stages):
-        kind = MSO_SHAPE.PENTAGON if i == 0 else MSO_SHAPE.CHEVRON
-        sh = shape(s, kind, px + i * pw, fy + Inches(0.36), pw + Inches(0.04), Inches(0.34),
-                   CORE if i in (3, 5) else CORE_LT, adj=0.3)
-        label_shape(sh, st, 8.3, True, WHITE if i in (3, 5) else INK)
-    text(s, fx + Inches(0.06), fy + Inches(0.74), fw - Inches(0.1), Inches(0.46), [
-        [("产出：", 8.8, True, CORE),
-         ("场景化标准负载库：预训练 / RL 后训练 / 在线推理 / PD 分离 / Agent 长上下文 / 训推混部", 8.8, False, INK)],
-        [("手段：", 8.8, True, CORE),
-         ("参数化生成器 + 生成式合成，按「模型×规模×流量」旋钮批量产出 DSE 输入", 8.8, False, INK)],
+    r2t, r2h = r1t + r1h + gap, Inches(0.84)
+    module_row(s, ix0, r2t, iw, r2h, "④ 面向 DSE 的\n流水线化负载数据工厂", [
+        "多源采集\n与脱敏", "负载特征化\n抽取", "参数化 / 生成式\n负载合成",
+        "分布 + 效用\n保真校验", "场景化负载库\n版本管理",
+    ], chevron=True)
+
+    r3t = r2t + r2h + gap
+    r3h = et + eh - pad - r3t
+    module_row(s, ix0, r3t, iw, r3h, "⑤ 统一负载 IR\n与多保真导入", [
+        "硬件无关执行图 IR\n兼容 Chakra ET", "L0 解析 / L1 算子图\n/ L2 包级切换",
+        "集合通信\n分解为网络流", "访存与 KV 流量\n映射内存仿真", "代表迭代\n采样加速",
     ])
 
-    # IR + calibration
-    iy = fy + fh + Inches(0.08)
-    ih = bottom - Inches(0.08) - iy
-    iw = Inches(4.42)
-    card(s, fx, iy, iw, ih, WHITE, CORE, 1.0)
-    text(s, fx + Inches(0.06), iy + Inches(0.03), iw - Inches(0.1), ih - Inches(0.05), [
-        [("⑤ ", 11.5, True, CORE), ("统一负载 IR 与多保真导入", 11.5, True, INK), ("  Workload IR", 8, False, MUTED)],
-        [("▪ ", 8.8, True, CORE), ("硬件无关执行图 IR（兼容 Chakra ET）：计算/通信/访存节点+依赖", 8.8, False, INK)],
-        [("▪ ", 8.8, True, CORE), ("L0 解析 → L1 算子图 → L2 包级，热点按需提升保真度", 8.8, False, INK)],
-        [("▪ ", 8.8, True, CORE), ("集合通信分解为流下发网络仿真；访存/KV 流量下发内存仿真", 8.8, False, INK)],
-    ])
-    kx = fx + iw + Inches(0.08)
-    kw = fw - iw - Inches(0.08)
-    card(s, kx, iy, kw, ih, WHITE, CORE, 1.0)
-    text(s, kx + Inches(0.06), iy + Inches(0.03), kw - Inches(0.1), ih - Inches(0.05), [
-        [("⑥ ", 11.5, True, CORE), ("闭环校准", 11.5, True, INK), ("  Calibration", 8, False, MUTED)],
-        [("▪ ", 8.8, True, CORE), ("小规模实测对标，误差回灌代价模型", 8.8, False, INK)],
-        [("▪ ", 8.8, True, CORE), ("双保真：", 8.8, True, INK), ("分布保真 + 效用保真（结论一致）", 8.8, False, INK)],
-    ])
+    cx = ix0 + iw + pad
+    ct, ch = et + pad, eh - 2 * pad
+    card(s, cx, ct, cal_w, ch, WHITE, CORE, 1.0, 0.04)
+    text(s, cx + Inches(0.04), ct + Inches(0.03), cal_w - Inches(0.08), Inches(0.5),
+         "⑥ 基于实测对标的\n闭环校准", 10, True, CORE, PP_ALIGN.CENTER, MSO_ANCHOR.MIDDLE)
+    grid(s, cx + Inches(0.07), ct + Inches(0.58), cal_w - Inches(0.14), ch - Inches(0.65), [
+        "小规模集群实测对标", "分层误差归因", "代价模型系数回灌",
+        "分布保真评估", "效用保真评估",
+    ], 1, CORE_BG, CORE_LT, 8.8)
 
-    arrow(s, Inches(10.02), Inches(3.55), Inches(0.24), Inches(0.42), CORE)
+    down_arrow(s, ix0 + iw / 2, et + eh + Inches(0.03))
+    shape(s, MSO_SHAPE.UP_ARROW, cx + cal_w / 2 - Inches(0.16), et + eh + Inches(0.03),
+          Inches(0.32), Inches(0.14), CORE, adj=0.5)
 
-    # ---- Right: kernels, outputs, benchmarks ----
-    rx, rw = Inches(10.3), Inches(2.67)
-    text(s, rx, top, rw, Inches(0.28),
-         [[("底层仿真内核", 11.5, True, BLUE_DK), ("  已具备", 9, True, GREEN)]])
-    ky = top + Inches(0.3)
-    kh = Inches(0.42)
-    kgap = Inches(0.06)
-    kws = (rw - 2 * kgap) / 3
-    for i, name in enumerate(["NPU 仿真", "内存/存储", "网络仿真"]):
-        sh = card(s, rx + i * (kws + kgap), ky, kws, kh, GRAY_BG, LINE, 0.75, 0.15)
-        label_shape(sh, name, 8.8, True, MUTED)
+    # Layer 3: simulation kernels
+    kt, kh = et + eh + Inches(0.2), Inches(0.46)
+    layer_tag(s, kt, kh, "仿真内核", "已具备", MUTED)
+    grid(s, x0, kt, full, kh, ["NPU 仿真", "内存 / 存储仿真", "网络仿真"], 3, GRAY_BG, LINE, 10, 0.08)
+    down_arrow(s, mid, kt + kh + Inches(0.03))
 
-    oy = ky + kh + Inches(0.12)
-    text(s, rx, oy, rw, Inches(0.28), "设计输出（DSE）", 11.5, True, BLUE_DK)
-    oh = Inches(1.5)
-    card(s, rx, oy + Inches(0.3), rw, oh, GREEN_BG, None)
-    bullets(s, rx + Inches(0.06), oy + Inches(0.34), rw - Inches(0.1), oh - Inches(0.06), [
-        "超节点规模与组网拓扑",
-        "Scale-up/Scale-out 带宽配比",
-        "HBM/池化内存/存储层级容量",
-        "PD 配比、调度与并行策略",
-        "瓶颈定位与 TCO/能效评估",
-    ], 9, dot=GREEN)
-
-    by = oy + Inches(0.3) + oh + Inches(0.12)
-    text(s, rx, by, rw, Inches(0.28), "业界对标与切入点", 11.5, True, BLUE_DK)
-    bh = bottom - by - Inches(0.3)
-    card(s, rx, by + Inches(0.3), rw, bh, WHITE, LINE)
-    text(s, rx + Inches(0.06), by + Inches(0.33), rw - Inches(0.1), bh - Inches(0.05), [
-        [("ASTRA-sim 2.0+Chakra", 8.5, True, BLUE), ("：图式执行 Trace IR", 8.5, False, INK)],
-        [("SimAI+AICB", 8.5, True, BLUE), ("（阿里）：训练通信负载生成", 8.5, False, INK)],
-        [("Vidur", 8.5, True, BLUE), ("（微软）：算子画像+请求分布驱动推理", 8.5, False, INK)],
-        [("NVIDIA DSX", 8.5, True, BLUE), ("：AI 工厂数字孪生蓝图", 8.5, False, INK)],
-        [("短板：", 8.5, True, CORE),
-         ("负载多为回放或简单分布，缺少面向未来模型与超大规模的可外推负载工程", 8.5, False, INK)],
-    ])
-
-    # ---- Bottom KPI strip ----
-    sy, sh_ = Inches(6.5), Inches(0.68)
-    rect(s, Inches(0.36), sy, Inches(12.61), sh_, WHITE, LINE, 0.75)
-    rect(s, Inches(0.36), sy, Inches(1.3), sh_, BLUE)
-    text(s, Inches(0.36), sy, Inches(1.3), sh_,
-         [[("立项目标", 11, True, WHITE)], [("建议值，待对齐", 8, False, WHITE)]],
-         align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
-    kpis = [
-        ("≤10%", "迭代时间/吞吐仿真误差（千卡实测对标）"),
-        ("1K→100K", "千卡 Trace 外推生成十万卡负载"),
-        ("6类·30+", "场景类别 · 版本化标准负载"),
-        ("≥1000", "配置/轮批量 DSE；解析级分钟、包级小时"),
-    ]
-    kx0 = Inches(1.74)
-    kwid = (Inches(12.97) - kx0) / len(kpis)
-    for i, (num, desc) in enumerate(kpis):
-        x = kx0 + i * kwid
-        if i:
-            rect(s, x - Inches(0.02), sy + Inches(0.12), Inches(0.012), sh_ - Inches(0.24), LINE)
-        text(s, x, sy, Inches(1.32), sh_, num, 13, True, CORE, PP_ALIGN.CENTER, MSO_ANCHOR.MIDDLE)
-        text(s, x + Inches(1.3), sy, kwid - Inches(1.34), sh_, desc, 8.8, False, INK,
-             anchor=MSO_ANCHOR.MIDDLE)
+    # Layer 4: design outputs
+    ot, oh = kt + kh + Inches(0.2), Inches(0.46)
+    layer_tag(s, ot, oh, "设计输出", "DSE", GREEN)
+    grid(s, x0, ot, full, oh, [
+        "超节点规模与组网拓扑", "Scale-up / Scale-out 带宽配比", "HBM / 池化内存 / 存储层级容量",
+        "PD 配比与并行策略", "瓶颈定位与 TCO / 能效评估",
+    ], 5, GREEN_BG, None, 9.5, 0.08)
 
     footer(s, 1, "设计态 AI 集群仿真器  ·  负载引擎立项  ·  内部讨论稿")
     s.notes_slide.notes_text_frame.text = (
         "讲解主线：底层算力/内存/网络仿真解决的是「系统怎么跑」，而设计态真正的输入是「跑什么」。"
         "设计态的目标系统和未来模型往往还不存在，所以负载不能只回放历史 Trace，必须可画像、可参数化、可外推。\n"
-        "①模型画像解决单作业内部的计算/通信/访存结构；②到达与请求分布解决多作业、多请求在时间上的叠加；"
-        "③Trace 拟合与外推把真实生产数据变成可放大、可迁移的模型参数；④数据工厂把以上能力流水线化、资产化；"
-        "⑤统一 IR 让同一份负载以不同保真度驱动已有仿真内核；⑥闭环校准用实测保证可信度。\n"
-        "KPI 为建议值，需结合现有实测平台规模与项目周期对齐。")
+        "①通过计算图展开刻画单作业内部的计算/通信/访存结构；②通过随机过程刻画多作业、多请求在时间上的叠加；"
+        "③通过统计拟合把真实生产 Trace 变成可放大、可迁移的负载；④把以上能力流水线化、资产化，批量产出 DSE 输入；"
+        "⑤统一 IR 让同一份负载以不同保真度驱动已有仿真内核；⑥仿真结果与实测对标，误差回灌，保证可信度。")
     return s
 
 
@@ -404,13 +356,13 @@ def slide_detail(prs):
     ]
     l, t = Inches(0.36), Inches(1.25)
     col_w = [Inches(1.7), Inches(2.5), Inches(4.05), Inches(2.2), Inches(2.16)]
-    ts = s.shapes.add_table(len(data), len(data[0]), l, t, sum(col_w, Inches(0)), Inches(5.6))
+    ts = s.shapes.add_table(len(data), len(data[0]), l, t, sum(col_w, Inches(0)), Inches(4.74))
     table = ts.table
     for i, cw in enumerate(col_w):
         table.columns[i].width = cw
     table.rows[0].height = Inches(0.36)
     for r in range(1, len(data)):
-        table.rows[r].height = Inches(0.86)
+        table.rows[r].height = Inches(0.73)
     for r, row in enumerate(data):
         for c, val in enumerate(row):
             cell = table.cell(r, c)
@@ -435,6 +387,28 @@ def slide_detail(prs):
                 _style(run, 10.5, True, CORE)
             else:
                 _style(run, 9.2, False, INK)
+
+    sy, sh_ = Inches(6.22), Inches(0.66)
+    rect(s, Inches(0.36), sy, Inches(12.61), sh_, WHITE, LINE, 0.75)
+    rect(s, Inches(0.36), sy, Inches(1.3), sh_, BLUE)
+    text(s, Inches(0.36), sy, Inches(1.3), sh_,
+         [[("立项目标", 11, True, WHITE)], [("建议值，待对齐", 8, False, WHITE)]],
+         align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
+    kpis = [
+        ("≤10%", "迭代时间/吞吐仿真误差（千卡实测对标）"),
+        ("1K→100K", "千卡 Trace 外推生成十万卡负载"),
+        ("6类·30+", "场景类别 · 版本化标准负载"),
+        ("≥1000", "配置/轮批量 DSE；解析级分钟、包级小时"),
+    ]
+    kx0 = Inches(1.74)
+    kwid = (Inches(12.97) - kx0) / len(kpis)
+    for i, (num, desc) in enumerate(kpis):
+        x = kx0 + i * kwid
+        if i:
+            rect(s, x - Inches(0.02), sy + Inches(0.12), Inches(0.012), sh_ - Inches(0.24), LINE)
+        text(s, x, sy, Inches(1.32), sh_, num, 13, True, CORE, PP_ALIGN.CENTER, MSO_ANCHOR.MIDDLE)
+        text(s, x + Inches(1.3), sy, kwid - Inches(1.34), sh_, desc, 8.8, False, INK,
+             anchor=MSO_ANCHOR.MIDDLE)
 
     footer(s, 2, "参考：ASTRA-sim 2.0/Chakra、SimAI（NSDI'25）、Vidur（MLSys'24）、NVIDIA Omniverse DSX、"
                  "Mystique（ISCA'23）、ServeGen、BurstGPT、Mooncake")
