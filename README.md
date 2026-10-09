@@ -47,6 +47,12 @@ Hot Chips 2026 上 OpenAI 第一颗推理芯片的系统拆解：Serving 定位�
 - 画框图的 skill：[`.cursor/skills/pptx-layered-arch-diagram/`](./.cursor/skills/pptx-layered-arch-diagram/SKILL.md)
 - [`v2 PPT（现行）`](./docs/design-simulator/设计态仿真器_负载引擎立项_v2.pptx) · [`v1 PPT（归档）`](./docs/design-simulator/设计态仿真器_负载引擎立项_v1.pptx)
 
+## Grok Bot 微信插件（安全补丁版）
+
+📁 [`tools/grok-wechat-secure/`](./tools/grok-wechat-secure/)
+
+社区微信插件固定在已审计版本，并修复了收文件路径穿越、白名单默认放行、日志泄露等问题。内含安装步骤。
+
 ## NVIDIA Scale-in 网络基础设施
 
 📁 [`docs/nvidia-scale-in/`](./docs/nvidia-scale-in/)
