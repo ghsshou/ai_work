@@ -9,6 +9,14 @@
 
 后续迭代按 v3、v4… 新增文件，旧版本保留不删。
 
+## 框架侧仿真能力（单页）
+
+训练、推理、RL 等框架的 DAG 导出与场景泛化。左 1/2 为分层框图，右 1/2 为三项关键技术；标题下为面向场景、竞争力目标、技术挑战。
+
+| 版本 | 文件 | 说明 |
+|---|---|---|
+| **v1（现行）** | [PPT](./设计态仿真器_框架DAG仿真能力_v1.pptx) · [build_framework_dag_v1.py](./scripts/build_framework_dag_v1.py) | 左半页：输入 → DAG 构建 / 动态改写 / 编排执行 → 已具备仿真核 → 泛化输出。右半页三条关键技术与框图编号对应 |
+
 ## 主页结构
 
 自上而下的分层架构，嵌套方框只写技术点名称：
@@ -40,4 +48,5 @@ v2 中①②③为三列、各 4 个纵向子框；④⑤⑥为横向行，各 4
 pip install python-pptx
 python3 docs/design-simulator/scripts/build_pptx.py      # v2
 python3 docs/design-simulator/scripts/build_pptx_v1.py   # v1
+python3 docs/design-simulator/scripts/build_framework_dag_v1.py
 ```
