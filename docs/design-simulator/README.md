@@ -11,11 +11,14 @@
 
 ## 框架侧仿真能力（单页）
 
-训练、推理、RL 等框架的 DAG 导出与场景泛化。这一页和上面的负载引擎立项分开命名。文字材料是 [框架侧DAG仿真能力.md](./框架侧DAG仿真能力.md)，版式 skill 是 [charter-maker](../../.cursor/skills/charter-maker/SKILL.md)。左 1/2 为分层框图，右 1/2 为三项关键技术；标题下为面向场景、竞争力目标、技术挑战。v3 把中间画成三段顺序：先并列抽出再收成 DAG，再沿规模链和序列链改写并派生域图，最后编排重放。每组约 4 个框。输入层直接到输出层。配色按 AICO-PPT：品牌红只标 DAG 引擎，输入和输出用灰蓝。
+训练、推理、RL 等框架的 DAG 导出与场景泛化。这一页和上面的负载引擎立项分开命名。文字材料是 [框架侧DAG仿真能力.md](./框架侧DAG仿真能力.md)，版式 skill 是 [charter-maker](../../.cursor/skills/charter-maker/SKILL.md)。左 1/2 为分层框图，右 1/2 为三项关键技术；标题下为面向场景、竞争力目标、技术挑战。v3 把中间画成三段顺序：先并列抽出再收成 DAG，再沿规模链和序列链改写并派生域图，最后编排重放。每组约 4 个框。输入层直接到输出层。v4 保持这一结构，框内只放技术名词：每步带 1–2 个技术标签，难点用小标签标出。配色按 AICO-PPT：品牌红只标 DAG 引擎，输入和输出用灰蓝。
 
 | 版本 | 文件 | 说明 |
 |---|---|---|
-| **v3（现行）** | [PPT](./设计态仿真器_框架DAG仿真能力_v3.pptx) · [build_framework_dag_v3.py](./scripts/build_framework_dag_v3.py) | 三段顺序：先抽出再收成 DAG；规模链与序列链并排向下，汇合后分出域图；最后编排重放。每组约 4 步，不含仿真核 |
+| **v6（现行）** | [PPT](./设计态仿真器_框架DAG仿真能力_v6.pptx) · [build_framework_dag_v6.py](./scripts/build_framework_dag_v6.py) | 版式同 v5；行话（Device Mesh、SPMD、rank、1F1B、SP/CP、KV、IR 等）换成通俗中文说法，如「卡组布局规划」「单卡图复制全卡」 |
+| v5（归档） | [PPT](./设计态仿真器_框架DAG仿真能力_v5.pptx) · [build_framework_dag_v5.py](./scripts/build_framework_dag_v5.py) | 内容同 v4；框图内过渡箭头改为浅灰 #c8c8cc，「难点」去掉边框、只留红字 |
+| v4（归档） | [PPT](./设计态仿真器_框架DAG仿真能力_v4.pptx) · [build_framework_dag_v4.py](./scripts/build_framework_dag_v4.py) | 沿用 v3 三段版式；框内去掉句子说明，每步改为「步骤 + 技术标签」，规模链 / 序列链 / ①③ 加「难点」标签；去掉「改写」等口语词 |
+| v3（归档） | [PPT](./设计态仿真器_框架DAG仿真能力_v3.pptx) · [build_framework_dag_v3.py](./scripts/build_framework_dag_v3.py) | 三段顺序：先抽出再收成 DAG；规模链与序列链并排向下，汇合后分出域图；最后编排重放。每组约 4 步，不含仿真核 |
 | v2（归档） | [PPT](./设计态仿真器_框架DAG仿真能力_v2.pptx) · [build_framework_dag_v2.py](./scripts/build_framework_dag_v2.py) | 六个模块各 6 个子框的表格排版 |
 | v1（归档） | [PPT](./设计态仿真器_框架DAG仿真能力_v1.pptx) · [build_framework_dag_v1.py](./scripts/build_framework_dag_v1.py) | 三模块各 4 子框，含仿真核层 |
 
@@ -50,6 +53,9 @@ v2 中①②③为三列、各 4 个纵向子框；④⑤⑥为横向行，各 4
 pip install python-pptx
 python3 docs/design-simulator/scripts/build_pptx.py      # v2
 python3 docs/design-simulator/scripts/build_pptx_v1.py   # v1
+python3 docs/design-simulator/scripts/build_framework_dag_v6.py
+python3 docs/design-simulator/scripts/build_framework_dag_v5.py
+python3 docs/design-simulator/scripts/build_framework_dag_v4.py
 python3 docs/design-simulator/scripts/build_framework_dag_v3.py
 python3 docs/design-simulator/scripts/build_framework_dag_v2.py
 python3 docs/design-simulator/scripts/build_framework_dag_v1.py
