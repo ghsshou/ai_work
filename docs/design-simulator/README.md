@@ -22,7 +22,16 @@
 | v2（归档） | [PPT](./设计态仿真器_框架DAG仿真能力_v2.pptx) · [build_framework_dag_v2.py](./scripts/build_framework_dag_v2.py) | 六个模块各 6 个子框的表格排版 |
 | v1（归档） | [PPT](./设计态仿真器_框架DAG仿真能力_v1.pptx) · [build_framework_dag_v1.py](./scripts/build_framework_dag_v1.py) | 三模块各 4 子框，含仿真核层 |
 
+## ScaleOut 网络仿真能力（单页）
+
+面向 10T～50T+ / 约 50 万卡量级集群的 ScaleOut 网络设计态仿真。版式与框架侧 DAG 同款：眉题 + 结论标题、三行横幅、左能力结构（输入 → 拓扑/协议/模组三层核心 → 输出，无灰色已具备层）、右三项关键技术。文字材料是 [ScaleOut网络仿真能力.md](./ScaleOut网络仿真能力.md)。
+
+| 版本 | 文件 | 说明 |
+|---|---|---|
+| **v1（现行）** | [PPT](./设计态仿真器_ScaleOut网络仿真能力_v1.pptx) · [build_scaleout_net_v1.py](./scripts/build_scaleout_net_v1.py) | 首版：拓扑与路由 / RoCE·UBoE 协议 / 182X 网卡模组三层；右栏三项关键技术对齐 |
+
 ## 主页结构
+
 
 自上而下的分层架构，嵌套方框只写技术点名称：
 
@@ -53,6 +62,7 @@ v2 中①②③为三列、各 4 个纵向子框；④⑤⑥为横向行，各 4
 pip install python-pptx
 python3 docs/design-simulator/scripts/build_pptx.py      # v2
 python3 docs/design-simulator/scripts/build_pptx_v1.py   # v1
+python3 docs/design-simulator/scripts/build_scaleout_net_v1.py
 python3 docs/design-simulator/scripts/build_framework_dag_v6.py
 python3 docs/design-simulator/scripts/build_framework_dag_v5.py
 python3 docs/design-simulator/scripts/build_framework_dag_v4.py
