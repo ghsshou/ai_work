@@ -24,11 +24,12 @@
 
 ## ScaleOut 网络仿真能力（单页）
 
-面向 10T～50T+、约 50 万卡 ScaleOut 的网络设计态仿真。文字材料是 [ScaleOut网络仿真能力.md](./ScaleOut网络仿真能力.md)。版式对齐框架侧 v6：眉题与结论标题、三行横幅、左能力结构（待验证问题条 → 输入 → 核心三层 → 输出）、右三项关键技术；不画灰色「已具备」层。v3 相对 v2：关键技术改为有深度的名词（基于…）；核心模块标题改为方法+对象；每层约 4 技术名词框；③ 含网侧交换机；无「校准」措辞。
+面向 10T～50T+、约 50 万卡 ScaleOut 的网络设计态仿真。文字材料是 [ScaleOut网络仿真能力.md](./ScaleOut网络仿真能力.md)。版式对齐框架侧 v6：眉题与结论标题、三行横幅、左能力结构（待验证问题条 → 输入 → 核心三层 → 输出）、右三项关键技术；不画灰色「已具备」层。v4 相对 v3：左核心框充实；关键技术引导词改为方法名词；③ 基于 CX model（182X 仅作映射）；竞争力目标改为 CX model / 网卡模组级行为。
 
 | 版本 | 文件 | 说明 |
 |---|---|---|
-| **v3（现行）** | [PPT](./设计态仿真器_ScaleOut网络仿真能力_v3.pptx) · [build_scaleout_net_v3.py](./scripts/build_scaleout_net_v3.py) | 关键技术改为有深度的名词（基于…）；核心模块标题改为方法+对象；每层约 4 技术名词框；待验证问题条带；③ 含网侧交换机；无「校准」 |
+| **v4（现行）** | [PPT](./设计态仿真器_ScaleOut网络仿真能力_v4.pptx) · [build_scaleout_net_v4.py](./scripts/build_scaleout_net_v4.py) | 左核心框充实；关键技术引导词=方法名词；③ 基于 CX model（182X 仅映射）；竞争力目标改为 CX model / 网卡模组级 |
+| v3（归档） | [PPT](./设计态仿真器_ScaleOut网络仿真能力_v3.pptx) · [build_scaleout_net_v3.py](./scripts/build_scaleout_net_v3.py) | 关键技术改为有深度的名词（基于…）；核心模块标题改为方法+对象；每层约 4 技术名词框；待验证问题条带；③ 含网侧交换机；无「校准」 |
 | v2（归档） | [PPT](./设计态仿真器_ScaleOut网络仿真能力_v2.pptx) · [build_scaleout_net_v2.py](./scripts/build_scaleout_net_v2.py) | 可落地机制。离散事件与 CLOS/Dragonfly 故障路径；RoCE / UBoE 队列、ECN、选择重传及事件序回放；182X DMA、门铃与硬件 offload 校准 |
 | v1（归档） | [PPT](./设计态仿真器_ScaleOut网络仿真能力_v1.pptx) · [build_scaleout_net_v1.py](./scripts/build_scaleout_net_v1.py) | 浅稿。能力名词列举：拓扑与路由 / RoCE·UBoE 协议 / 182X 网卡模组 |
 
@@ -64,6 +65,7 @@ v2 中①②③为三列、各 4 个纵向子框；④⑤⑥为横向行，各 4
 pip install python-pptx
 python3 docs/design-simulator/scripts/build_pptx.py      # v2
 python3 docs/design-simulator/scripts/build_pptx_v1.py   # v1
+python3 docs/design-simulator/scripts/build_scaleout_net_v4.py
 python3 docs/design-simulator/scripts/build_scaleout_net_v3.py
 python3 docs/design-simulator/scripts/build_scaleout_net_v2.py
 python3 docs/design-simulator/scripts/build_scaleout_net_v1.py
