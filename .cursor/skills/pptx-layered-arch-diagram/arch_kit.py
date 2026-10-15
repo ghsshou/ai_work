@@ -19,7 +19,10 @@ SPEC is a list of layers, drawn top to bottom with down arrows between them:
     {"name": "仿真内核", "sub": "已具备", "tone": "gray", "items": [...],
      "feedback": True}   # orange up-arrow from this layer into the layer above
 
-Tones: blue / core / gray / green. "\\n" inside a label forces a centered line break.
+Tones: blue / core / gray / green (legacy load-engine palette).
+For new charter/立项 slides prefer AICO via aico_tones(): core #b5333b / #fdf0f1.
+Also: DIAG_LINE (#5a5a5e), LEAF_FILL (white), BAND_FILLS (soft per-module bands).
+"\\n" inside a label forces a centered line break.
 """
 
 from __future__ import annotations
@@ -49,6 +52,19 @@ GREEN = RGBColor(0x3D, 0x86, 0x2C)
 GREEN_BG = RGBColor(0xE8, 0xF3, 0xE2)
 GRAY_BG = RGBColor(0xE9, 0xEC, 0xF0)
 
+# AICO-PPT charter palette (prefer for new 立项 slides; legacy TONES kept for load-engine example)
+AICO_RED = RGBColor(0xB5, 0x33, 0x3B)
+AICO_RED_SOFT = RGBColor(0xFD, 0xF0, 0xF1)
+AICO_SLATE = RGBColor(0x56, 0x64, 0x72)
+DIAG_LINE = RGBColor(0x5A, 0x5A, 0x5E)  # deep gray stroke for modules / leaves / in-out
+LEAF_FILL = RGBColor(0xFF, 0xFF, 0xFF)  # white fill for leaf technique + I/O chips
+CARD_LINE = RGBColor(0xE7, 0xE7, 0xE7)  # light border for right-side key-tech cards
+BAND_FILLS = (
+    RGBColor(0xEE, 0xF2, 0xF6),  # cool slate
+    RGBColor(0xF7, 0xF0, 0xF1),  # warm rose/cream
+    RGBColor(0xEE, 0xF5, 0xF0),  # sage/mint-gray
+)
+
 # tone -> (tag color, box fill, box line)
 TONES = {
     "blue": (BLUE, BLUE_BG, None),
@@ -56,6 +72,34 @@ TONES = {
     "gray": (MUTED, GRAY_BG, LINE),
     "green": (GREEN, GREEN_BG, None),
 }
+
+
+def aico_tones():
+    """Return tone map for AICO-PPT charter slides (red core, slate I/O)."""
+    return {
+        "blue": (AICO_SLATE, LEAF_FILL, DIAG_LINE),
+        "core": (AICO_RED, AICO_RED_SOFT, DIAG_LINE),
+        "gray": (MUTED, GRAY_BG, DIAG_LINE),
+        "green": (AICO_SLATE, LEAF_FILL, DIAG_LINE),
+        "aico_core": (AICO_RED, AICO_RED_SOFT, DIAG_LINE),
+        "aico_io": (AICO_SLATE, LEAF_FILL, DIAG_LINE),
+    }
+
+
+def band_fill(index: int):
+    """Soft fill for the i-th sibling core module band (cycles BAND_FILLS)."""
+    return BAND_FILLS[index % len(BAND_FILLS)]
+
+
+def leaf_chip(slide, l, t, w, h, content, size=8.8, bold=False, color=INK,
+              fill=None, line=None, line_pt=0.75):
+    """Rounded leaf / I/O chip: white fill + deep-gray stroke by default."""
+    fill = LEAF_FILL if fill is None else fill
+    line = DIAG_LINE if line is None else line
+    sh = rbox(slide, l, t, w, h, fill, line, line_pt, 0.12)
+    label(sh, content, size, bold, color)
+    return sh
+
 
 W = Inches(13.333)
 H = Inches(7.5)
@@ -164,13 +208,19 @@ def arrow(slide, x, t, up=False, color=DIM):
     shape(slide, kind, x - Inches(0.16), t, Inches(0.32), Inches(0.14), color, adj=0.5)
 
 
-def module_column(slide, l, t, w, h, title, items, accent, fill, line, title_h=Inches(0.44)):
-    rbox(slide, l, t, w, h, WHITE, accent, 1.0, 0.04)
+def module_column(slide, l, t, w, h, title, items, accent, fill, line, title_h=Inches(0.44),
+                  cols=None, leaf_fill=None, leaf_line=None):
+    """cols=None -> 1 column (legacy); cols=4 with 8 items draws a 2x4 density grid."""
+    stroke = leaf_line if leaf_line is not None else (line if line is not None else accent)
+    rbox(slide, l, t, w, h, WHITE, stroke, 1.0, 0.04)
     text(slide, l + Inches(0.05), t + Inches(0.02), w - Inches(0.1), title_h, title,
          10, True, accent, PP_ALIGN.CENTER, MSO_ANCHOR.MIDDLE)
     pad = Inches(0.07)
+    n_cols = cols if cols is not None else 1
+    chip_fill = leaf_fill if leaf_fill is not None else fill
+    chip_line = leaf_line if leaf_line is not None else line
     grid(slide, l + pad, t + title_h + Inches(0.02), w - 2 * pad, h - title_h - Inches(0.09),
-         items, 1, fill, line)
+         items, n_cols, chip_fill, chip_line)
 
 
 def module_row(slide, l, t, w, h, title, items, accent, fill, line,
@@ -193,24 +243,37 @@ def module_row(slide, l, t, w, h, title, items, accent, fill, line,
 
 
 def _draw_container(slide, x0, t, w, h, layer, accent, fill, line):
-    rbox(slide, x0, t, w, h, fill, accent, 1.75, 0.02)
+    # Outer envelope stroke: deep gray when layer requests charter style.
+    envelope_line = layer.get("stroke", accent)
+    rbox(slide, x0, t, w, h, fill, envelope_line, 1.75, 0.02)
     pad, gap = Inches(0.08), Inches(0.07)
     ix, iw = x0 + pad, w - 2 * pad
     y = t + pad
     cols = layer.get("columns") or []
     rows = layer.get("rows") or []
+    leaf_fill = layer.get("leaf_fill", fill)
+    leaf_line = layer.get("leaf_line", line)
     if cols:
         ch = Inches(layer.get("columns_h", 1.86)) if rows else h - 2 * pad
         mw = (iw - (len(cols) - 1) * gap) / len(cols)
         for i, m in enumerate(cols):
-            module_column(slide, ix + i * (mw + gap), y, mw, ch, m["title"], m["items"],
-                          accent, fill, line)
+            mod_fill = m.get("band_fill", band_fill(i) if layer.get("banded") else fill)
+            # Optional per-module tinted band behind the column card.
+            if layer.get("banded") or "band_fill" in m:
+                rbox(slide, ix + i * (mw + gap), y, mw, ch, mod_fill, leaf_line or DIAG_LINE, 1.0, 0.04)
+            module_column(
+                slide, ix + i * (mw + gap), y, mw, ch, m["title"], m["items"],
+                accent, leaf_fill, leaf_line,
+                cols=m.get("cols", layer.get("item_cols")),
+                leaf_fill=m.get("leaf_fill", leaf_fill),
+                leaf_line=m.get("leaf_line", leaf_line),
+            )
         y += ch + gap
     if rows:
         rh = (t + h - pad - y - (len(rows) - 1) * gap) / len(rows)
         for m in rows:
             module_row(slide, ix, y, iw, rh, m["title"], m["items"], accent,
-                       fill, line, chevron=m.get("chevron", False))
+                       leaf_fill, leaf_line, chevron=m.get("chevron", False))
             y += rh + gap
 
 

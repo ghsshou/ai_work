@@ -24,11 +24,13 @@
 
 ## ScaleOut 网络仿真能力（单页）
 
-面向 10T～50T+、约 50 万卡 ScaleOut 的网络设计态仿真。文字材料是 [ScaleOut网络仿真能力.md](./ScaleOut网络仿真能力.md)。版式对齐框架侧 v6：眉题与结论标题、三行横幅、左能力结构（待验证问题条 → 输入 → 核心三层 → 输出）、右三项关键技术；不画灰色「已具备」层。v4 相对 v3：左核心框充实；关键技术引导词改为方法名词；③ 基于 CX model（182X 仅作映射）；竞争力目标改为 CX model / 网卡模组级行为。
+面向 10T～50T+、约 50 万卡 ScaleOut 的网络设计态仿真。文字材料是 [ScaleOut网络仿真能力.md](./ScaleOut网络仿真能力.md)。版式对齐框架侧 v6：眉题与结论标题、三行横幅、左能力结构（待验证问题条 → 输入 → 核心三层 → 输出）、右三项关键技术；不画灰色「已具备」层。v5 相对 v4：左核心三模块信息密度翻倍（每模块 8 个技术名词框，两行×四列）。v6 相对 v5：正式文案不变；左图描边深灰 `#5a5a5e`、末级/输入输出白底、①②③ 分带浅色底；新增第 2 页纯文字技术点备用页（不进正式稿）。
 
 | 版本 | 文件 | 说明 |
 |---|---|---|
-| **v4（现行）** | [PPT](./设计态仿真器_ScaleOut网络仿真能力_v4.pptx) · [build_scaleout_net_v4.py](./scripts/build_scaleout_net_v4.py) | 左核心框充实；关键技术引导词=方法名词；③ 基于 CX model（182X 仅映射）；竞争力目标改为 CX model / 网卡模组级 |
+| **v6（现行）** | [PPT](./设计态仿真器_ScaleOut网络仿真能力_v6.pptx) · [build_scaleout_net_v6.py](./scripts/build_scaleout_net_v6.py) | 左图深灰描边 + 白底末级 + 三层分带浅底；新增备用纯文字技术点页（01/02、02/02）；正式文案同 v5 |
+| v5（归档） | [PPT](./设计态仿真器_ScaleOut网络仿真能力_v5.pptx) · [build_scaleout_net_v5.py](./scripts/build_scaleout_net_v5.py) | 左核心密度翻倍：每模块 8 名词框（2×4）；右关键技术与横幅同 v4；③ 基于 CX model（182X 仅映射） |
+| v4（归档） | [PPT](./设计态仿真器_ScaleOut网络仿真能力_v4.pptx) · [build_scaleout_net_v4.py](./scripts/build_scaleout_net_v4.py) | 左核心框充实；关键技术引导词=方法名词；③ 基于 CX model（182X 仅映射）；竞争力目标改为 CX model / 网卡模组级 |
 | v3（归档） | [PPT](./设计态仿真器_ScaleOut网络仿真能力_v3.pptx) · [build_scaleout_net_v3.py](./scripts/build_scaleout_net_v3.py) | 关键技术改为有深度的名词（基于…）；核心模块标题改为方法+对象；每层约 4 技术名词框；待验证问题条带；③ 含网侧交换机；无「校准」 |
 | v2（归档） | [PPT](./设计态仿真器_ScaleOut网络仿真能力_v2.pptx) · [build_scaleout_net_v2.py](./scripts/build_scaleout_net_v2.py) | 可落地机制。离散事件与 CLOS/Dragonfly 故障路径；RoCE / UBoE 队列、ECN、选择重传及事件序回放；182X DMA、门铃与硬件 offload 校准 |
 | v1（归档） | [PPT](./设计态仿真器_ScaleOut网络仿真能力_v1.pptx) · [build_scaleout_net_v1.py](./scripts/build_scaleout_net_v1.py) | 浅稿。能力名词列举：拓扑与路由 / RoCE·UBoE 协议 / 182X 网卡模组 |
@@ -65,6 +67,8 @@ v2 中①②③为三列、各 4 个纵向子框；④⑤⑥为横向行，各 4
 pip install python-pptx
 python3 docs/design-simulator/scripts/build_pptx.py      # v2
 python3 docs/design-simulator/scripts/build_pptx_v1.py   # v1
+python3 docs/design-simulator/scripts/build_scaleout_net_v6.py
+python3 docs/design-simulator/scripts/build_scaleout_net_v5.py
 python3 docs/design-simulator/scripts/build_scaleout_net_v4.py
 python3 docs/design-simulator/scripts/build_scaleout_net_v3.py
 python3 docs/design-simulator/scripts/build_scaleout_net_v2.py
