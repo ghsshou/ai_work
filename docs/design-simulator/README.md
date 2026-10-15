@@ -24,11 +24,12 @@
 
 ## ScaleOut 网络仿真能力（单页）
 
-面向 10T～50T+ / 约 50 万卡量级集群的 ScaleOut 网络设计态仿真。版式与框架侧 DAG 同款：眉题 + 结论标题、三行横幅、左能力结构（输入 → 拓扑/协议/模组三层核心 → 输出，无灰色已具备层）、右三项关键技术。文字材料是 [ScaleOut网络仿真能力.md](./ScaleOut网络仿真能力.md)。
+面向 10T～50T+、约 50 万卡 ScaleOut 的网络设计态仿真。文字材料是 [ScaleOut网络仿真能力.md](./ScaleOut网络仿真能力.md)。版式对齐框架侧 v6：眉题与结论标题、三行横幅、左能力结构、右三项关键技术。左图为输入层 → 仿真技术（拓扑 / 协议 / 模组）→ 输出层，不画灰色「已具备」层。v2 用可落地的业界说法：离散事件调度、CLOS/Dragonfly、链路故障注入、控制面重收敛、转发路径核对；RoCE / UBoE 的发送与完成队列、ECN/拥塞反压、超时与选择重传，以及集合通信事件序回放；182X DMA 描述符、门铃与队列、硬件 offload、端侧延迟吞吐校准。
 
 | 版本 | 文件 | 说明 |
 |---|---|---|
-| **v1（现行）** | [PPT](./设计态仿真器_ScaleOut网络仿真能力_v1.pptx) · [build_scaleout_net_v1.py](./scripts/build_scaleout_net_v1.py) | 首版：拓扑与路由 / RoCE·UBoE 协议 / 182X 网卡模组三层；右栏三项关键技术对齐 |
+| **v2（现行）** | [PPT](./设计态仿真器_ScaleOut网络仿真能力_v2.pptx) · [build_scaleout_net_v2.py](./scripts/build_scaleout_net_v2.py) | 可落地机制。离散事件与 CLOS/Dragonfly 故障路径；RoCE / UBoE 队列、ECN、选择重传及事件序回放；182X DMA、门铃与硬件 offload 校准 |
+| v1（归档） | [PPT](./设计态仿真器_ScaleOut网络仿真能力_v1.pptx) · [build_scaleout_net_v1.py](./scripts/build_scaleout_net_v1.py) | 浅稿。能力名词列举：拓扑与路由 / RoCE·UBoE 协议 / 182X 网卡模组 |
 
 ## 主页结构
 
@@ -62,6 +63,7 @@ v2 中①②③为三列、各 4 个纵向子框；④⑤⑥为横向行，各 4
 pip install python-pptx
 python3 docs/design-simulator/scripts/build_pptx.py      # v2
 python3 docs/design-simulator/scripts/build_pptx_v1.py   # v1
+python3 docs/design-simulator/scripts/build_scaleout_net_v2.py
 python3 docs/design-simulator/scripts/build_scaleout_net_v1.py
 python3 docs/design-simulator/scripts/build_framework_dag_v6.py
 python3 docs/design-simulator/scripts/build_framework_dag_v5.py
