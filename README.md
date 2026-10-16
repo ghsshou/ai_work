@@ -1,6 +1,14 @@
 # ai_work
 
-LLM 推理学习笔记与基础设施对比资料。
+LLM 推理学习笔记、基础设施对比资料，以及前沿技术报告分析。
+
+## 前沿论文 / 技术报告分析
+
+📁 [`docs/paper-analyses/`](./docs/paper-analyses/)
+
+对前沿模型与系统技术报告的阅读笔记，命名统一为「xxx 技术报告分析」。
+
+- [`DeepSeek-V4.1-Flash 技术报告分析`](./docs/paper-analyses/DeepSeek-V4.1-Flash%20技术报告分析.md)
 
 ## 学习资料目录（推荐从这里进）
 
